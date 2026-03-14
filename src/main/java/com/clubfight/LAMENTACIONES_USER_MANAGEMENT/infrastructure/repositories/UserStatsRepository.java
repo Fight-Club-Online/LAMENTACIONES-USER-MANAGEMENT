@@ -1,0 +1,15 @@
+package com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.repositories;
+
+import java.util.Optional;
+
+import org.springframework.data.mongodb.repository.MongoRepository;
+
+import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.persistence.UserStatsDocument;
+
+/**
+ * Repositorio para las estadíticas de un usuario
+ */
+public interface UserStatsRepository extends MongoRepository<UserStatsDocument, String> {
+    Optional<UserStatsDocument> findByUserId(String userId);
+
+}
