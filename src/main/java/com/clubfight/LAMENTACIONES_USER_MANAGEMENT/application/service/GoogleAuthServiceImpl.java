@@ -64,11 +64,6 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
                         return userRepositoryPort.save(newUser);
                     });
 
-            if (user.getRole() == null) {
-                user.setRole(Role.USER);
-                user = userRepositoryPort.save(user);
-            }
-
             String accessToken = jwtUtil.generateToken(user);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
 
