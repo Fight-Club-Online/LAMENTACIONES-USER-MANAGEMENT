@@ -27,7 +27,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final UserRepositoryPort userRepositoryPort;
 
-    @Override
+   @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
@@ -42,12 +42,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String header = request.getHeader("Authorization");
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
-            String userId = jwtUtil.extractUserId(token);
-            userRepositoryPort.findById(userId).ifPresent(user -> {
-                UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(user, null, List.of());
-                SecurityContextHolder.getContext().setAuthentication(auth);
-            });
+            try {
+                String userId = jwtUtil.extractUserId(token);
+                if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    userRepositoryPort.findById(userId).ifPresent(user -> {
+                        UsernamePasswordAuthenticationToken auth =
+                                new UsernamePasswordAuthenticationToken(user, null, List.of());
+                        SecurityContextHolder.getContext().setAuthentication(auth);
+                    });
+                }
+            } catch (Exception e) {
+                logger.error("No se pudo autenticar con el token: " + e.getMessage());
+            }
         }
 
         filterChain.doFilter(request, response);

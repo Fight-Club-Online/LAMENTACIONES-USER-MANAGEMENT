@@ -65,7 +65,6 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase, Regis
         return AuthResponse.builder()
                 .userId(user.getId())
                 .email(user.getEmail())
-                .role(user.getRole().name())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken.getToken())
                 .build();
@@ -94,7 +93,6 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase, Regis
         return AuthResponse.builder()
                 .userId(user.getId())
                 .email(user.getEmail())
-                .role(user.getRole().name())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken.getToken())
                 .build();
@@ -121,7 +119,6 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase, Regis
 
         return AuthResponse.builder()
                 .userId(guest.getId())
-                .role(guest.getRole().name())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken.getToken())
                 .build();

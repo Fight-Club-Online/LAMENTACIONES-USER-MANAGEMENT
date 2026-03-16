@@ -1,5 +1,7 @@
 package com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.dtos.response;
 
+import javax.management.relation.Role;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,5 +20,5 @@ public class AuthResponse {
     private String userId;
     private String username;
     private String email;
-    private String role;
+    private Role role;
 }

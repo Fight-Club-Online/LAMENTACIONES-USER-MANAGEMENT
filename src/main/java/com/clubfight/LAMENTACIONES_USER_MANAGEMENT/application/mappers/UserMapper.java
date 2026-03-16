@@ -49,7 +49,6 @@ public class UserMapper {
                 .accessToken(accessToken)
                 .userId(user.getId())
                 .email(user.getEmail())
-                .role(user.getRole().name())
                 .build();
     }
 

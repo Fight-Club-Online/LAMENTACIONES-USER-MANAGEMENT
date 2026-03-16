@@ -30,7 +30,6 @@ class OAuthControllerTest {
                 .refreshToken("refresh-1")
                 .userId("robin")
                 .email("robin@gmail.com")
-                .role("USER")
                 .build();
 
         when(googleAuthService.authenticate("token-123")).thenReturn(expected);
