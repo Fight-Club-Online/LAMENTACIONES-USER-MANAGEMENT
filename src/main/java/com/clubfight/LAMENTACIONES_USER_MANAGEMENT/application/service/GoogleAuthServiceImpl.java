@@ -1,10 +1,12 @@
 package com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.service;
 
+import java.time.Instant;
 import java.util.Collections;
 
 import org.springframework.stereotype.Service;
 
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.ports.out.UserRepositoryPort;
+import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.enums.Role;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.model.RefreshToken;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.model.User;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.config.JwtUtil;
@@ -33,14 +35,12 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
 
     @Override
     public AuthResponse authenticate(String idTokenString) {
-
         try {
-
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
-                            GoogleNetHttpTransport.newTrustedTransport(),
-                            GsonFactory.getDefaultInstance())
-                            .setAudience(Collections.singletonList(clientId))
-                            .build();
+                    GoogleNetHttpTransport.newTrustedTransport(),
+                    GsonFactory.getDefaultInstance())
+                    .setAudience(Collections.singletonList(clientId))
+                    .build();
 
             GoogleIdToken idToken = verifier.verify(idTokenString);
 
@@ -49,20 +49,25 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
             }
 
             GoogleIdToken.Payload payload = idToken.getPayload();
-
             String email = payload.getEmail();
-            String name = (String) payload.get("name");
 
             User user = userRepositoryPort.findByEmail(email)
                     .orElseGet(() -> {
-
+                    
                         User newUser = User.builder()
                                 .email(email)
                                 .verified(true)
+                                .role(Role.USER) 
+                                .createdAt(Instant.now())
                                 .build();
 
                         return userRepositoryPort.save(newUser);
                     });
+
+            if (user.getRole() == null) {
+                user.setRole(Role.USER);
+                user = userRepositoryPort.save(user);
+            }
 
             String accessToken = jwtUtil.generateToken(user);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
@@ -75,7 +80,9 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
                     .build();
 
         } catch (Exception e) {
-            throw new RuntimeException("Error verificando Google token", e);
+            
+            e.printStackTrace(); 
+            throw new RuntimeException("Error verificando Google token: " + e.getMessage(), e);
         }
     }
 }
