@@ -4,6 +4,12 @@ import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.commands.P
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.ports.out.UserProfileRepositoryPort;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.service.UserProfileService;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.model.UserProfile;
+import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.commands.SaveUserProfileCommand;
+import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.commands.UpdateUserProfileCommand;
+import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.mappers.UserProfileMapper;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.config.RedisConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -23,6 +29,9 @@ class UserProfileServicePatchIfsTest {
 
     @Mock
     private PatchUserProfileCommand command;
+
+    @Mock
+    private com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.mappers.UserProfileMapper mapper;
 
     @BeforeEach
     void setUp() {
@@ -208,4 +217,81 @@ class UserProfileServicePatchIfsTest {
         assertEquals("Bogota", saved.getCity());
         assertTrue(saved.isNotification());
     }
+
+    @Test
+    void shouldNotChangeAnythingWhenProfileNotFound() {
+
+        String userId = "u-missing";
+        
+        when(repository.findByUserId(userId)).thenReturn(Optional.empty());
+        
+        UserProfile result = service.getUserProfile(userId);
+        
+        assertNull(result);
+        verify(repository).findByUserId(userId);
+    }
+
+    @Test
+    void shouldCreateRedisConnectionFactory() {
+
+        RedisConfig config = new RedisConfig();
+
+        ReflectionTestUtils.setField(config, "redisHost", "localhost");
+        ReflectionTestUtils.setField(config, "redisPort", 6379);
+
+        LettuceConnectionFactory factory = config.redisConnectionFactory();
+
+        assertNotNull(factory);
+    }
+
+    @Test
+    void shouldSaveUserProfile() {
+
+        SaveUserProfileCommand cmd = mock(SaveUserProfileCommand.class);
+        UserProfile profile = baseProfile("u-save");
+        
+        when(mapper.fromSaveCommand(cmd)).thenReturn(profile);
+        service.saveUserProfile(cmd);
+        
+        verify(mapper).fromSaveCommand(cmd);
+        verify(repository).save(profile);
+    }
+
+
+    @Test
+    void shouldReturnNullWhenProfileNotFound() {
+
+        when(repository.findByUserId("u-missing")).thenReturn(Optional.empty());
+        
+        UserProfile result = service.getUserProfile("u-missing");
+        
+        assertNull(result);
+    
+    }
+
+
+    @Test
+    void shouldUpdateUserProfile() {
+
+        UpdateUserProfileCommand cmd = mock(UpdateUserProfileCommand.class);
+        UserProfile profile = baseProfile("u-update");
+        
+        when(mapper.fromUpdateCommand(cmd)).thenReturn(profile);
+        
+        service.update(cmd);
+        
+        verify(mapper).fromUpdateCommand(cmd);
+        verify(repository).save(profile);
+    }
+
+    @Test
+    void shouldDeleteUserProfile() {
+
+        String userId = "u-delete";
+        
+        service.delete(userId);
+        
+        verify(repository).deleteByUserId(userId);
+    }
+ 
 }

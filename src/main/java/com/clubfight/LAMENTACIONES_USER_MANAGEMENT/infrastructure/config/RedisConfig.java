@@ -9,19 +9,19 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 
 /**
- * Configuración redis
+ * Configuración redis.
  */
 @Configuration
 @EnableRedisRepositories
 public class RedisConfig {
 
-    @Value("${spring.data.redis.host}")
+    @Value("${spring.data.redis.host:redis}")
     private String redisHost;
 
-    @Value("${spring.data.redis.port}")
+    @Value("${spring.data.redis.port:6379}")
     private int redisPort;
 
-    @Value("${spring.data.redis.password}")
+    @Value("${spring.data.redis.password:}")
     private String redisPassword;
 
     @Value("${spring.data.redis.ssl.enabled:false}")
@@ -30,10 +30,13 @@ public class RedisConfig {
     @Bean
     public LettuceConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration serverConfig = new RedisStandaloneConfiguration(redisHost, redisPort);
-        serverConfig.setPassword(redisPassword);
 
-        LettuceClientConfiguration clientConfig = redisSsl ? 
-            LettuceClientConfiguration.builder().useSsl().build() : 
+        if (redisPassword != null && !redisPassword.isBlank()) {
+            serverConfig.setPassword(redisPassword);
+        }
+
+        LettuceClientConfiguration clientConfig = redisSsl ?
+            LettuceClientConfiguration.builder().useSsl().build() :
             LettuceClientConfiguration.builder().build();
 
         return new LettuceConnectionFactory(serverConfig, clientConfig);

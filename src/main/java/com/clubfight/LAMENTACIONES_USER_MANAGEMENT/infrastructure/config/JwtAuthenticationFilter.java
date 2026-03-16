@@ -35,31 +35,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
-        if (path.contains("/api/v1/users/register") || 
-            path.startsWith("/api/v1/users/login") || 
-            path.contains("/auth/oauth")) {
-            
+        if (path.contains("/api/v1/users/register") ||
+            path.startsWith("/api/v1/users/login")   ||
+            path.contains("/api/v1/users/guest")     ||
+            path.contains("/auth/")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String header = request.getHeader("Authorization");
-        
+
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
             try {
                 String userId = jwtUtil.extractUserId(token);
-            
+
                 if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     userRepositoryPort.findById(userId).ifPresent(user -> {
                         UsernamePasswordAuthenticationToken auth =
                                 new UsernamePasswordAuthenticationToken(user, null, List.of());
-                        
                         SecurityContextHolder.getContext().setAuthentication(auth);
                     });
                 }
             } catch (Exception e) {
-                logger.error("Error al autenticar con el token JWT: " + e.getMessage());
+                SecurityContextHolder.clearContext();
             }
         }
 
