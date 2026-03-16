@@ -18,7 +18,8 @@ import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.ports.out.UserRep
 import lombok.RequiredArgsConstructor;
 
 /**
- * Configuración del filtro de jwt.
+ * Filtro de autenticación JWT.
+ * Se encarga de validar el token en cada petición, excepto en rutas públicas.
  */
 @Component
 @RequiredArgsConstructor
@@ -27,32 +28,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final UserRepositoryPort userRepositoryPort;
 
-   @Override
+    @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getRequestURI();
 
-        if (path.startsWith("/api/v1/users/register") || path.startsWith("/api/v1/users/login")) {
+        if (path.startsWith("/api/v1/users/register") || 
+            path.startsWith("/api/v1/users/login") || 
+            path.startsWith("/auth/oauth")) {
+            
             filterChain.doFilter(request, response);
             return;
         }
 
         String header = request.getHeader("Authorization");
+        
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
             try {
                 String userId = jwtUtil.extractUserId(token);
+            
                 if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     userRepositoryPort.findById(userId).ifPresent(user -> {
                         UsernamePasswordAuthenticationToken auth =
                                 new UsernamePasswordAuthenticationToken(user, null, List.of());
+                        
                         SecurityContextHolder.getContext().setAuthentication(auth);
                     });
                 }
             } catch (Exception e) {
-                logger.error("No se pudo autenticar con el token: " + e.getMessage());
+                logger.error("Error al autenticar con el token JWT: " + e.getMessage());
             }
         }
 
