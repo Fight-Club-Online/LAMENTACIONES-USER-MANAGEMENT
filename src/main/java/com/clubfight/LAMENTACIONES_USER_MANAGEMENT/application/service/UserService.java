@@ -47,6 +47,7 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase, Regis
 
         User user = User.builder()
                 .email(command.getEmail())
+                .username(command.getUsername())
                 .password(passwordEncoder.encode(command.getPassword()))
                 .role(Role.USER)
                 .verified(false)
@@ -64,6 +65,7 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase, Regis
 
         return AuthResponse.builder()
                 .userId(user.getId())
+                .username(user.getUsername())
                 .email(user.getEmail())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken.getToken())
@@ -92,6 +94,7 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase, Regis
 
         return AuthResponse.builder()
                 .userId(user.getId())
+                .username(user.getUsername())
                 .email(user.getEmail())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken.getToken())
@@ -104,6 +107,7 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase, Regis
 
         User guest = User.builder()
                 .role(Role.GUEST)
+                .username(command.getUsername())
                 .guestExpiration(Instant.now().plusSeconds(3600))
                 .createdAt(Instant.now())
                 .build();
@@ -119,6 +123,7 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase, Regis
 
         return AuthResponse.builder()
                 .userId(guest.getId())
+                .username(guest.getUsername())
                 .accessToken(accessToken)
                 .refreshToken(refreshToken.getToken())
                 .build();
