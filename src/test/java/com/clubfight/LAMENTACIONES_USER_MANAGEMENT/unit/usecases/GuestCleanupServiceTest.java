@@ -1,6 +1,7 @@
 package com.clubfight.LAMENTACIONES_USER_MANAGEMENT.unit.usecases;
 
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.service.GuestCleanupService;
+import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.ports.in.DeleteUserProfileUseCase;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.ports.out.RefreshTokenRepositoryPort;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.ports.out.UserRepositoryPort;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.model.User;
@@ -12,6 +13,7 @@ import org.mockito.*;
 import java.time.Instant;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class GuestCleanupServiceTest {
@@ -24,6 +26,9 @@ class GuestCleanupServiceTest {
 
     @Mock
     private RefreshTokenRepositoryPort refreshTokenRepositoryPort;
+
+    @Mock
+private DeleteUserProfileUseCase deleteUserProfileUseCase; 
 
     @BeforeEach
     void setUp() {

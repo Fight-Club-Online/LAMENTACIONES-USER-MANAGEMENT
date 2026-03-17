@@ -1,6 +1,7 @@
 package com.clubfight.LAMENTACIONES_USER_MANAGEMENT.unit.usecases;
 
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.service.GoogleAuthServiceImpl;
+import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.UserEventPublisher;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.ports.out.UserRepositoryPort;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.model.RefreshToken;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.model.User;
@@ -16,7 +17,6 @@ import org.mockito.*;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 
-import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -40,6 +40,9 @@ class GoogleAuthServiceImplTest {
     @Mock
     private com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.service.RefreshTokenService refreshTokenService;
 
+    @Mock
+    private UserEventPublisher eventPublisher;
+    
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);

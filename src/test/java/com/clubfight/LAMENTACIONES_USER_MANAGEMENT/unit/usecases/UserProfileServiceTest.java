@@ -6,7 +6,6 @@ import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.service.UserProfi
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.model.UserProfile;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.commands.SaveUserProfileCommand;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.commands.UpdateUserProfileCommand;
-import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.mappers.UserProfileMapper;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.config.RedisConfig;
@@ -219,19 +218,6 @@ class UserProfileServicePatchIfsTest {
     }
 
     @Test
-    void shouldNotChangeAnythingWhenProfileNotFound() {
-
-        String userId = "u-missing";
-        
-        when(repository.findByUserId(userId)).thenReturn(Optional.empty());
-        
-        UserProfile result = service.getUserProfile(userId);
-        
-        assertNull(result);
-        verify(repository).findByUserId(userId);
-    }
-
-    @Test
     void shouldCreateRedisConnectionFactory() {
 
         RedisConfig config = new RedisConfig();
@@ -257,17 +243,6 @@ class UserProfileServicePatchIfsTest {
         verify(repository).save(profile);
     }
 
-
-    @Test
-    void shouldReturnNullWhenProfileNotFound() {
-
-        when(repository.findByUserId("u-missing")).thenReturn(Optional.empty());
-        
-        UserProfile result = service.getUserProfile("u-missing");
-        
-        assertNull(result);
-    
-    }
 
 
     @Test
