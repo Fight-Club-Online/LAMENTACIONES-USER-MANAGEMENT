@@ -15,49 +15,49 @@ public class UserProfileMapper {
 
     public UserProfile toDomain(UserProfileDocument document) {
         return new UserProfile(
-                document.getUserId(),
-                document.getUsername(),
-                document.getBio(),
-                document.getCountry(),
-                document.getAvatarURL(),
-                document.getCity(),
-                document.isNotification()
+            document.getUserId(),
+            document.getUsername(),
+            document.getBio(),
+            document.getCountry(),
+            document.getAvatarURL(),
+            document.getCity(),
+            document.isNotification()
         );
     }
 
     public UserProfileDocument toDocument(UserProfile profile) {
         return new UserProfileDocument(
-                profile.getUserId(),
-                profile.getUsername(),
-                profile.getBio(),
-                profile.getCountry(),
-                profile.getAvatarURL(),
-                profile.getCity(),
-                profile.isNotification()
+            profile.getUserId(),
+            profile.getUsername(),
+            profile.getBio(),
+            profile.getCountry(),
+            profile.getAvatarURL(),
+            profile.getCity(),
+            profile.isNotification()
         );
     }
 
     public UserProfile fromSaveCommand(SaveUserProfileCommand command) {
         return new UserProfile(
-                command.getUserId(),
-                command.getUsername(),
-                command.getBio(),
-                command.getCountry(),
-                command.getAvatarURL(),
-                command.getCity(),
-                command.isNotification()
+            command.getUserId(),
+            command.getUsername(),
+            command.getBio(),
+            command.getCountry(),
+            command.getAvatarURL(),
+            command.getCity(),
+            command.isNotification()
         );
     }
 
     public UserProfile fromUpdateCommand(UpdateUserProfileCommand command) {
         return new UserProfile(
-                command.getUserId(),
-                command.getUsername(),
-                command.getBio(),
-                command.getCountry(),
-                command.getAvatarURL(),
-                command.getCity(),
-                command.isNotification()
+            command.getUserId(),
+            command.getUsername(),
+            command.getBio(),
+            command.getCountry(),
+            command.getAvatarURL(),
+            command.getCity(),
+            command.isNotification()
         );
     }
 

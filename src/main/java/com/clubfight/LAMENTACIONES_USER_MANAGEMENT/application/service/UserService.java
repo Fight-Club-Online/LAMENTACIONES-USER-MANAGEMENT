@@ -114,12 +114,12 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase, Regis
 
         guest = userRepositoryPort.save(guest);
 
-        String accessToken = jwtUtil.generateToken(guest);
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(guest.getId());
-
         eventPublisher.publishGuestRegistered(
                 UserMapper.toGuestRegisteredEvent(guest)
         );
+
+        String accessToken = jwtUtil.generateToken(guest);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(guest.getId());
 
         return AuthResponse.builder()
                 .userId(guest.getId())

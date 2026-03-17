@@ -20,6 +20,7 @@ public class UserRegisteredEvent {
     private String userId;
     private String email;
     private String username;
+    private String avatarURL;
     private Role role;
     private Instant createdAt;
 }
