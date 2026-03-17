@@ -19,10 +19,11 @@ public class RabbitConfig {
     public static final String USER_EXCHANGE = "user.events";
     public static final String REGISTERED_QUEUE = "user.registered.queue";
     public static final String LOGGEDIN_QUEUE = "user.loggedin.queue";
+    public static final String GUEST_REGISTERED_QUEUE = "user.guest.registered.queue";
 
     @Bean
-    public DirectExchange userExchange() {
-        return new DirectExchange(USER_EXCHANGE);
+    public Queue guestRegisteredQueue() {
+        return new Queue(GUEST_REGISTERED_QUEUE, true);
     }
 
     @Bean
@@ -36,13 +37,28 @@ public class RabbitConfig {
     }
 
     @Bean
-    public Binding bindingRegistered(Queue registeredQueue, DirectExchange userExchange) {
-        return BindingBuilder.bind(registeredQueue).to(userExchange).with("user.registered");
+    public DirectExchange userExchange() {
+        return new DirectExchange(USER_EXCHANGE);
+    }
+    @Bean
+    public Binding bindingGuestRegistered() {
+        return BindingBuilder.bind(guestRegisteredQueue())
+                .to(userExchange())
+                .with("user.guest.registered");
+    }
+    
+    @Bean
+    public Binding bindingRegistered() {
+        return BindingBuilder.bind(registeredQueue())
+                .to(userExchange())
+                .with("user.registered");
     }
 
     @Bean
-    public Binding bindingLoggedIn(Queue loggedInQueue, DirectExchange userExchange) {
-        return BindingBuilder.bind(loggedInQueue).to(userExchange).with("user.loggedin");
+    public Binding bindingLoggedIn() {
+        return BindingBuilder.bind(loggedInQueue())
+                .to(userExchange())
+                .with("user.loggedin");
     }
 
     @Bean

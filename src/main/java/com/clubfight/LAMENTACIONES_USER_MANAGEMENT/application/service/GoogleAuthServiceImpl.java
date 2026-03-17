@@ -5,6 +5,8 @@ import java.util.Collections;
 
 import org.springframework.stereotype.Service;
 
+import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.UserEventPublisher;
+import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.UserRegisteredEvent;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.ports.out.UserRepositoryPort;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.enums.Role;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.model.RefreshToken;
@@ -29,6 +31,7 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
     private final UserRepositoryPort userRepositoryPort;
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
+    private final UserEventPublisher eventPublisher;
 
     @Value("${google.client.id}")
     private String clientId;
@@ -51,18 +54,33 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
             GoogleIdToken.Payload payload = idToken.getPayload();
             String email = payload.getEmail();
 
+            final boolean[] isNewUser = {false};
+
+            String name = (String) payload.get("name");
+            String pictureUrl = (String) payload.get("picture");
+
             User user = userRepositoryPort.findByEmail(email)
                     .orElseGet(() -> {
-                    
+                        isNewUser[0] = true;
                         User newUser = User.builder()
                                 .email(email)
+                                .username(name) 
                                 .verified(true)
-                                .role(Role.USER) 
+                                .role(Role.USER)
                                 .createdAt(Instant.now())
                                 .build();
-
                         return userRepositoryPort.save(newUser);
                     });
+
+            if (isNewUser[0]) {
+                eventPublisher.publishUserRegistered(UserRegisteredEvent.builder()
+                        .userId(user.getId())
+                        .email(user.getEmail())
+                        .username(user.getUsername())
+                        .avatarURL(pictureUrl) 
+                        .createdAt(user.getCreatedAt())
+                        .build());
+            }
 
             String accessToken = jwtUtil.generateToken(user);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
@@ -71,6 +89,7 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
                     .accessToken(accessToken)
                     .refreshToken(refreshToken.getToken())
                     .email(user.getEmail())
+                    .username(user.getUsername())
                     .userId(user.getId())
                     .build();
 

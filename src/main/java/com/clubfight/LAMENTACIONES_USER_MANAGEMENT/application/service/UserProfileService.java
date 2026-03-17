@@ -1,6 +1,7 @@
 package com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.commands.PatchUserProfileCommand;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.commands.SaveUserProfileCommand;
@@ -15,42 +16,52 @@ import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.ports.out.UserPro
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.model.UserProfile;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Servicio para el perfil del usuario.
  */
 @Service
 @RequiredArgsConstructor
-public class UserProfileService implements SaveUserProfileUseCase, GetUserProfileUseCase , UpdateUserProfileUseCase, PatchUserProfileUseCase, DeleteUserProfileUseCase {
+@Slf4j 
+public class UserProfileService implements SaveUserProfileUseCase, GetUserProfileUseCase, UpdateUserProfileUseCase, PatchUserProfileUseCase, DeleteUserProfileUseCase {
 
     private final UserProfileRepositoryPort repository;
     private final UserProfileMapper mapper;
 
     @Override
+    @Transactional
     public void saveUserProfile(SaveUserProfileCommand command) {
-        UserProfile profile = mapper.fromSaveCommand(command);
+        
+        if (repository.findByUserId(command.getUserId()).isPresent()) {
+            log.info("El perfil para el usuario {} ya existe. Omitiendo creación.", command.getUserId());
+            return;
+        }
 
+        UserProfile profile = mapper.fromSaveCommand(command);
+        
+        log.info("Guardando perfil nuevo: userId={}, username={}", profile.getUserId(), profile.getUsername());
         repository.save(profile);
     }
     
     @Override
     public UserProfile getUserProfile(String userId) {
-        
-        return repository.findByUserId(userId).orElse(null);
+        return repository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Perfil no encontrado para el usuario: " + userId));
     }
 
     @Override
+    @Transactional
     public void update(UpdateUserProfileCommand command) {
-
-        UserProfile profile = mapper.fromUpdateCommand(command);
-        repository.save(profile);
+        UserProfile updatedProfile = mapper.fromUpdateCommand(command);
+        repository.save(updatedProfile);
     }
 
     @Override
+    @Transactional
     public void patch(String userId, PatchUserProfileCommand command) {
-
         UserProfile profile = repository.findByUserId(userId)
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("Perfil no encontrado para parchear"));
 
         if (command.getBio() != null) profile.setBio(command.getBio());
         if (command.getCountry() != null) profile.setCountry(command.getCountry());
@@ -58,11 +69,14 @@ public class UserProfileService implements SaveUserProfileUseCase, GetUserProfil
         if (command.getCity() != null) profile.setCity(command.getCity());
         if (command.getNotification() != null) profile.setNotification(command.getNotification());
 
+        log.info("Aplicando patch al perfil de: {}", userId);
         repository.save(profile);
     }
 
     @Override
+    @Transactional
     public void delete(String userId) {
         repository.deleteByUserId(userId);
+        log.info("Perfil eliminado para el usuario: {}", userId);
     }
 }

@@ -20,5 +20,4 @@ public class UserStats {
     private int points;
     private int level;
     private int streak;
-
 }

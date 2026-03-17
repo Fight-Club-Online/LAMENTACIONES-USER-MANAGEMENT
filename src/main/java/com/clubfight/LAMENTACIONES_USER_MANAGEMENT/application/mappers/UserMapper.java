@@ -19,6 +19,7 @@ public class UserMapper {
         return UserDocument.builder()
                 .id(user.getId())
                 .email(user.getEmail())
+                .username(user.getUsername())
                 .password(user.getPassword())
                 .verified(user.isVerified())
                 .role(user.getRole())
@@ -34,6 +35,7 @@ public class UserMapper {
         return User.builder()
                 .id(doc.getId())
                 .email(doc.getEmail())
+                .username(doc.getUsername())
                 .password(doc.getPassword())
                 .verified(doc.isVerified())
                 .role(doc.getRole())
@@ -46,19 +48,21 @@ public class UserMapper {
 
     public static AuthResponse toAuthResponse(User user, String accessToken) {
         return AuthResponse.builder()
-                .accessToken(accessToken)
-                .userId(user.getId())
-                .email(user.getEmail())
-                .build();
+            .accessToken(accessToken)
+            .userId(user.getId())
+            .username(user.getUsername()) 
+            .email(user.getEmail())  
+            .build();
     }
 
     public static UserRegisteredEvent toUserRegisteredEvent(User user) {
         return UserRegisteredEvent.builder()
-                .userId(user.getId())
-                .email(user.getEmail())
-                .role(user.getRole())
-                .createdAt(user.getCreatedAt())
-                .build();
+            .userId(user.getId())
+            .email(user.getEmail())
+            .username(user.getUsername())
+            .role(user.getRole())
+            .createdAt(user.getCreatedAt())
+            .build();
     }
 
     public static UserLoggedInEvent toUserLoggedInEvent(User user, String token) {
@@ -71,7 +75,8 @@ public class UserMapper {
 
     public static GuestRegisteredEvent toGuestRegisteredEvent(User guest) {
         return GuestRegisteredEvent.builder()
-                .userId(guest.getId())
+                .userId(guest.getId()) 
+                .username(guest.getUsername())
                 .createdAt(guest.getCreatedAt())
                 .guestExpiration(guest.getGuestExpiration())
                 .build();
@@ -93,6 +98,7 @@ public class UserMapper {
         return UserRegisteredEvent.builder()
                 .userId(user.getId())
                 .email(user.getEmail())
+                .username(user.getUsername())
                 .role(user.getRole())
                 .createdAt(user.getCreatedAt())
                 .build();
