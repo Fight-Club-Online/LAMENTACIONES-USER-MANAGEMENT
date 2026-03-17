@@ -34,13 +34,11 @@ public class UserProfileService implements SaveUserProfileUseCase, GetUserProfil
     public void saveUserProfile(SaveUserProfileCommand command) {
         
         if (repository.findByUserId(command.getUserId()).isPresent()) {
-            log.info("El perfil para el usuario {} ya existe. Omitiendo creación.", command.getUserId());
             return;
         }
 
         UserProfile profile = mapper.fromSaveCommand(command);
         
-        log.info("Guardando perfil nuevo: userId={}, username={}", profile.getUserId(), profile.getUsername());
         repository.save(profile);
     }
     
@@ -69,7 +67,6 @@ public class UserProfileService implements SaveUserProfileUseCase, GetUserProfil
         if (command.getCity() != null) profile.setCity(command.getCity());
         if (command.getNotification() != null) profile.setNotification(command.getNotification());
 
-        log.info("Aplicando patch al perfil de: {}", userId);
         repository.save(profile);
     }
 
@@ -77,6 +74,5 @@ public class UserProfileService implements SaveUserProfileUseCase, GetUserProfil
     @Transactional
     public void delete(String userId) {
         repository.deleteByUserId(userId);
-        log.info("Perfil eliminado para el usuario: {}", userId);
     }
 }
