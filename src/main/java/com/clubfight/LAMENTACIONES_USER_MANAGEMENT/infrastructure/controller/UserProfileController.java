@@ -19,7 +19,7 @@ import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.ports.in.SaveUser
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.ports.in.UpdateUserProfileUseCase;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.model.UserProfile;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import org.springframework.web.bind.annotation.RequestBody;
 import lombok.RequiredArgsConstructor;
 
 /**

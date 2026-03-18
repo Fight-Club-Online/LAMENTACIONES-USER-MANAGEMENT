@@ -74,5 +74,6 @@ public class UserProfileService implements SaveUserProfileUseCase, GetUserProfil
     @Transactional
     public void delete(String userId) {
         repository.deleteByUserId(userId);
+
     }
 }

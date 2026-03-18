@@ -26,15 +26,15 @@ public class UserProfileMapper {
     }
 
     public UserProfileDocument toDocument(UserProfile profile) {
-        return new UserProfileDocument(
-            profile.getUserId(),
-            profile.getUsername(),
-            profile.getBio(),
-            profile.getCountry(),
-            profile.getAvatarURL(),
-            profile.getCity(),
-            profile.isNotification()
-        );
+        return UserProfileDocument.builder()
+            .userId(profile.getUserId()) 
+            .username(profile.getUsername())
+            .bio(profile.getBio())
+            .country(profile.getCountry())
+            .avatarURL(profile.getAvatarURL())
+            .city(profile.getCity())
+            .notification(profile.isNotification())
+            .build();
     }
 
     public UserProfile fromSaveCommand(SaveUserProfileCommand command) {

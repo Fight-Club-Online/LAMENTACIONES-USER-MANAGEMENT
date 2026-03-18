@@ -41,4 +41,6 @@ public class UserProfileRepositoryAdapter implements UserProfileRepositoryPort {
     public void deleteByUserId(String userId) {
         mongoRepo.deleteByUserId(userId);
     }
+    
+    
 }
