@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
 
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.persistence.UserDocument;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.enums.Role;
@@ -12,6 +13,7 @@ import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.enums.Role;
 /**
  * Repositorio para un usuario.
  */
+@Repository
 public interface UserRepository extends MongoRepository<UserDocument, String> {
     Optional<UserDocument> findByEmail(String email);
     boolean existsByEmail(String email);
