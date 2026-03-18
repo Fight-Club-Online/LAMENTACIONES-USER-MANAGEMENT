@@ -1,4 +1,4 @@
-package com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.repositories;
+package com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.repositories.mongo;
 
 import java.util.Optional;
 

@@ -8,8 +8,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
-@EnableMongoRepositories(basePackages = "com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.repositories")
-@EnableRedisRepositories(basePackages = "com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.repositories")
+@EnableMongoRepositories(basePackages = "com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.repositories.mongo")
+@EnableRedisRepositories(basePackages = "com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.repositories.redis")
 public class LamentacionesUserManagementApplication {
 
 	public static void main(String[] args) {

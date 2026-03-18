@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.ports.out.RefreshTokenRepositoryPort;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.model.RefreshToken;
-import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.repositories.RefreshTokenRepository;
+import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.repositories.redis.RefreshTokenRepository;
 
 import lombok.RequiredArgsConstructor;
 

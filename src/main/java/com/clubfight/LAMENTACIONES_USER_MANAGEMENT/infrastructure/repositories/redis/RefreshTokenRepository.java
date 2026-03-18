@@ -1,4 +1,4 @@
-package com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.repositories;
+package com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.repositories.redis;
 
 import org.springframework.data.repository.CrudRepository;
 

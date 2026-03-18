@@ -10,8 +10,9 @@ import org.springframework.stereotype.Repository;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.mappers.UserMapper;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.ports.out.UserRepositoryPort;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.model.User;
+import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.repositories.mongo.UserRepository;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.enums.Role;
-import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.repositories.UserRepository;
+
 
 import lombok.RequiredArgsConstructor;
 

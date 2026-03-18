@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.mappers.UserStatsMapper;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.ports.out.UserStatsRepositoryPort;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.model.UserStats;
-import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.repositories.UserStatsRepository;
+import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.repositories.mongo.UserStatsRepository;
 
 import lombok.RequiredArgsConstructor;
 
