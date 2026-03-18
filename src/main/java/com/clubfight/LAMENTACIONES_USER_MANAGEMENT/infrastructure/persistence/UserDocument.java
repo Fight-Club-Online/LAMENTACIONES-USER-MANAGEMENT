@@ -3,7 +3,6 @@ package com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.persistence;
 import java.time.Instant;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.enums.Role;
