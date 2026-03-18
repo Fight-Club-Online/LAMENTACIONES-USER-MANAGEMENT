@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
  * Controlador para las estadísticas del usuario.
  */
 @RestController
-@RequestMapping("/user-stats")
+@RequestMapping("/api/user-stats")
 @RequiredArgsConstructor
 public class UserStatsController {
 
