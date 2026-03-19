@@ -44,8 +44,7 @@ public class UserProfileService implements SaveUserProfileUseCase, GetUserProfil
     
     @Override
     public UserProfile getUserProfile(String userId) {
-        return repository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Perfil no encontrado para el usuario: " + userId));
+        return repository.findByUserId(userId).orElse(null);
     }
 
     @Override
