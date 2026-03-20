@@ -10,6 +10,7 @@ import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.model.UserProfile;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
+import org.springframework.http.ResponseEntity;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,17 +45,31 @@ class UserProfileControllerTest {
 
         verify(saveUserProfileUseCase, times(1)).saveUserProfile(cmd);
     }
-
+    
     @Test
     void shouldGetProfile() {
-
+        
         String userId = "Juan";
         UserProfile profile = new UserProfile(userId, "juan", "Tunja", "Colombia", "ayuda", "Bogota", true);
+        
         when(getUserProfileUseCase.getUserProfile(userId)).thenReturn(profile);
+        ResponseEntity<UserProfile> res = controller.getProfile(userId);
+        
+        assertEquals(200, res.getStatusCode().value());
+        assertSame(profile, res.getBody());
+        verify(getUserProfileUseCase).getUserProfile(userId);
+    }
+    
+    @Test
+    void shouldReturn404WhenProfileNotFound() {
 
-        UserProfile res = controller.getProfile(userId);
-
-        assertSame(profile, res);
+        String userId = "NoExiste";
+        
+        when(getUserProfileUseCase.getUserProfile(userId)).thenReturn(null);
+        ResponseEntity<UserProfile> res = controller.getProfile(userId);
+        
+        assertEquals(404, res.getStatusCode().value());
+        assertNull(res.getBody());
         verify(getUserProfileUseCase).getUserProfile(userId);
     }
 

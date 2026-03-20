@@ -1,5 +1,6 @@
 package com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.controller;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -40,10 +41,14 @@ public class UserProfileController {
     public void createProfile(@RequestBody SaveUserProfileCommand command) {
         saveUserProfileUseCase.saveUserProfile(command);
     }
-
+    
     @GetMapping("/{userId}")
-    public UserProfile getProfile(@PathVariable String userId) {
-        return getUserProfileUseCase.getUserProfile(userId);
+    public ResponseEntity<UserProfile> getProfile(@PathVariable String userId) {
+        UserProfile profile = getUserProfileUseCase.getUserProfile(userId);
+        if (profile == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(profile);
     }
 
     @PutMapping("/{userId}")

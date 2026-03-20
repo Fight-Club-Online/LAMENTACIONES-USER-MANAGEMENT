@@ -34,14 +34,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String path = request.getServletPath();
+        String method = request.getMethod();
+        
+        boolean isPublic =
+            (path.equals("/api/v1/users/register") && method.equals("POST")) ||
+            (path.equals("/api/v1/users/login")    && method.equals("POST")) ||
+            (path.equals("/api/v1/users/guest")    && method.equals("POST")) ||
+            path.startsWith("/auth/")              ||
+            path.equals("/health")               ||
+            path.startsWith("/actuator/health")    ||
+            path.startsWith("/v3/api-docs")        ||
+            path.startsWith("/swagger-ui");
 
-        if (path.contains("/api/v1/users/register") ||
-            path.startsWith("/api/v1/users/login")   ||
-            path.contains("/api/v1/users/guest")     ||
-            path.contains("/auth/")) {
+
+        if (isPublic) {
             filterChain.doFilter(request, response);
             return;
-        }
+        }    
 
         String header = request.getHeader("Authorization");
 

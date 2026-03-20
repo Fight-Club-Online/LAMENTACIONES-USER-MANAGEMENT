@@ -268,5 +268,38 @@ class UserProfileServicePatchIfsTest {
         
         verify(repository).deleteByUserId(userId);
     }
- 
+
+
+    @Test
+    void shouldNotSaveProfileIfAlreadyExists() {
+        SaveUserProfileCommand cmd = mock(SaveUserProfileCommand.class);
+        
+        when(cmd.getUserId()).thenReturn("u-exists");
+        when(repository.findByUserId("u-exists")).thenReturn(Optional.of(baseProfile("u-exists")));
+        service.saveUserProfile(cmd);
+        
+        verify(repository, never()).save(any());
+        verify(mapper, never()).fromSaveCommand(any());
+    }
+    
+    @Test
+    void shouldReturnNullWhenProfileNotFound() {
+
+        when(repository.findByUserId("u-missing")).thenReturn(Optional.empty());
+        
+        UserProfile result = service.getUserProfile("u-missing");
+
+        assertNull(result);
+    }
+
+    @Test
+    void shouldThrowWhenPatchProfileNotFound() {
+        String userId = "u-not-exist";
+
+        when(repository.findByUserId(userId)).thenReturn(Optional.empty());
+        
+        assertThrows(RuntimeException.class, () -> service.patch(userId, command));
+        
+        verify(repository, never()).save(any());
+    }
 }
