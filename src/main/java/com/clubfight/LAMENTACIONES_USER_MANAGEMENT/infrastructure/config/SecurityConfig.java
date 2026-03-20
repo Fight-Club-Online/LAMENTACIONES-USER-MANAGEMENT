@@ -1,5 +1,6 @@
 package com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.config;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,14 +31,33 @@ public class SecurityConfig {
             .cors(Customizer.withDefaults()) 
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/oauth/**").permitAll() 
-                .requestMatchers("/api/v1/users/**").permitAll()
-                .requestMatchers("/auth/**", "/health", "/actuator/health", "/error", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                .requestMatchers("/api/v1/users/register").permitAll()
+                .requestMatchers("/api/v1/users/login").permitAll()
+                .requestMatchers("/api/v1/users/guest").permitAll()
+                .requestMatchers("/auth/**").permitAll()
+                .requestMatchers("/health", "/actuator/health", "/error").permitAll()
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            );
+            )
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write(
+                    "{\"status\":401,\"error\":\"Unauthorized\",\"message\":\"Token requerido o inválido\"}"
+                );
+            })
+            .accessDeniedHandler((request, response, accessDeniedException) -> {
+                response.setStatus(HttpStatus.FORBIDDEN.value());
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write(
+                    "{\"status\":403,\"error\":\"Forbidden\",\"message\":\"No tienes permisos para este recurso\"}"
+                );
+            })
+        );
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

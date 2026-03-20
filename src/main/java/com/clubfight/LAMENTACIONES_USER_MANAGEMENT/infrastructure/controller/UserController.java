@@ -3,6 +3,7 @@ package com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.ports.in.LoginUserUseCase;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.ports.in.RegisterGuestUseCase;
@@ -30,7 +31,7 @@ public class UserController {
     private final RegisterGuestUseCase registerGuestUseCase;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> registerUser(@RequestBody RegisterUserRequest request) {
+    public ResponseEntity<AuthResponse> registerUser(@Valid @RequestBody RegisterUserRequest request) {
         RegisterUserCommand command = RegisterUserCommand.builder()
                 .email(request.getEmail())
                 .username(request.getUsername())
@@ -42,7 +43,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> loginUser(@RequestBody LoginUserRequest request) {
+    public ResponseEntity<AuthResponse> loginUser(@Valid @RequestBody LoginUserRequest request) {
         LoginUserCommand command = LoginUserCommand.builder()
                 .email(request.getEmail())
                 .password(request.getPassword())
@@ -53,7 +54,7 @@ public class UserController {
     }
 
     @PostMapping("/guest")
-    public ResponseEntity<AuthResponse> registerGuest(@RequestBody RegisterGuestRequest request) {
+    public ResponseEntity<AuthResponse> registerGuest(@Valid @RequestBody RegisterGuestRequest request) {
         RegisterGuestCommand command = RegisterGuestCommand.builder()
                 .username(request.getUsername())
                 .build();
