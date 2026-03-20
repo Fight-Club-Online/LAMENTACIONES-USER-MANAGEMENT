@@ -25,6 +25,7 @@ public class UserProfileEventListener {
         SaveUserProfileCommand command = new SaveUserProfileCommand();
         command.setUserId(event.getUserId());
         command.setUsername(event.getUsername());
+        command.setBio("Luchador EDITA TU BIO");
         command.setAvatarURL(event.getAvatarURL() != null ? event.getAvatarURL() : "default_player.png");
         command.setNotification(true);
         
