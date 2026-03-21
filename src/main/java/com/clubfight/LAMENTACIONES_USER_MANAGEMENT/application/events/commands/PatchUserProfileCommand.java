@@ -8,6 +8,7 @@ import lombok.Data;
 @Data
 public class PatchUserProfileCommand {
 
+    private String username;
     private String bio;
     private String country;
     private String avatarURL;

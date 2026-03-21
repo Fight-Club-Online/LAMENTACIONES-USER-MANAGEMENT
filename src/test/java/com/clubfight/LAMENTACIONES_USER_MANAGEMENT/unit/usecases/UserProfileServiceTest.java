@@ -50,6 +50,35 @@ class UserProfileServicePatchIfsTest {
     }
 
     @Test
+    void shouldPatchUsernameOnly() {
+        
+        String userId = "Porras Oscar";
+        UserProfile existing = baseProfile(userId);
+        
+        when(repository.findByUserId(userId)).thenReturn(Optional.of(existing));
+        when(command.getUsername()).thenReturn("Oscar Porras");
+        when(command.getBio()).thenReturn(null);
+        when(command.getCountry()).thenReturn(null);
+        when(command.getAvatarURL()).thenReturn(null);
+        when(command.getCity()).thenReturn(null);
+        when(command.getNotification()).thenReturn(null);
+        
+        service.patch(userId, command);
+        
+        ArgumentCaptor<UserProfile> captor = ArgumentCaptor.forClass(UserProfile.class);
+        verify(repository).save(captor.capture());
+        
+        UserProfile saved = captor.getValue();
+        
+        assertEquals("Oscar Porras", saved.getUsername());
+        assertEquals("Tunja", saved.getBio());
+        assertEquals("Colombia", saved.getCountry());
+        assertEquals("JuanAvatar", saved.getAvatarURL());
+        assertEquals("Bogota", saved.getCity());
+        assertTrue(saved.isNotification());
+    }
+
+    @Test
     void shouldPatchBioOnly() {
 
         String userId = "u-bio";

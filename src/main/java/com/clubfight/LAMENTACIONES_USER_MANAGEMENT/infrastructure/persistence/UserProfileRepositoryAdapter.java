@@ -20,15 +20,18 @@ public class UserProfileRepositoryAdapter implements UserProfileRepositoryPort {
 
     private final UserProfileRepository mongoRepo;
     private final UserProfileMapper mapper;
-
+    
     @Override
     public UserProfile save(UserProfile profile) {
-
-        var document = mapper.toDocument(profile);
+        
+        UserProfileDocument document = mapper.toDocument(profile);
+        mongoRepo.findByUserId(profile.getUserId())
+        .ifPresent(existing -> document.setId(existing.getId()));
+        
         var saved = mongoRepo.save(document);
-
+        
         return mapper.toDomain(saved);
-    }
+}
 
     @Override
     public Optional<UserProfile> findByUserId(String userId) {

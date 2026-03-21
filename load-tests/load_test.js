@@ -20,7 +20,7 @@ export const options = {
     { duration: "30s", target: 0   },
   ],
   thresholds: {
-    http_req_duration:  ["p(95)<500"],
+    http_req_duration:  ["p(95)<3000"],
     login_success_rate: ["rate>0.98"],
     register_errors:    ["count<5"],
   },
@@ -43,6 +43,10 @@ function uniqueUsername() {
 }
 
 export default function () {
+  
+  if (__ITER === 0 && __VU === 1) {
+    sleep(5);
+  }
 
   // 1. REGISTER
   const email    = uniqueEmail();

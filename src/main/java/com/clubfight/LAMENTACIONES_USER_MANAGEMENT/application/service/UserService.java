@@ -6,6 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.UserRegisteredEvent;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.UserEventPublisher;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.commands.LoginUserCommand;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.commands.RegisterGuestCommand;
@@ -55,9 +56,16 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase, Regis
                 .build();
 
         user = userRepositoryPort.save(user);
-
+        
         eventPublisher.publishUserRegistered(
-                UserMapper.toUserRegisteredEvent(user)
+                UserRegisteredEvent.builder()
+                .userId(user.getId())
+                .email(user.getEmail())
+                .username(user.getUsername())
+                .avatarURL(command.getAvatarURL()) 
+                .role(user.getRole())
+                .createdAt(user.getCreatedAt())
+                .build()
         );
 
         String accessToken = jwtUtil.generateToken(user);

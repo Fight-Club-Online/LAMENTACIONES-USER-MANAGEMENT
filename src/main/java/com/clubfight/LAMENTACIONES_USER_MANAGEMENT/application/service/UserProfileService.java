@@ -60,6 +60,7 @@ public class UserProfileService implements SaveUserProfileUseCase, GetUserProfil
         UserProfile profile = repository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Perfil no encontrado para parchear"));
 
+        if (command.getUsername() != null) profile.setUsername(command.getUsername());
         if (command.getBio() != null) profile.setBio(command.getBio());
         if (command.getCountry() != null) profile.setCountry(command.getCountry());
         if (command.getAvatarURL() != null) profile.setAvatarURL(command.getAvatarURL());
