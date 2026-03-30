@@ -611,3 +611,118 @@ Servicio administrado de observabilidad y alertas del sistema.
 | metrics.json    | `<<Artifact>>` | Métricas exportadas de todos los servicios          |
 
 ---
+## Diagrama de Clases — Módulo de Login / Usuarios
+
+[📄 Ver documentación (PDF)](docs/DclasesLogin.pdf)
+
+### Descripción General
+
+Este diagrama modela las entidades del dominio relacionadas con la autenticación,
+gestión de sesiones y perfil de usuario en Fight Club Online. Cubre el ciclo
+completo: desde el registro (invitado o registrado) hasta la gestión de tokens,
+roles y estados de cuenta.
+
+---
+
+## Entidades
+
+---
+
+### 📋 `<<Entity>> User`
+Entidad central del módulo. Representa a cualquier usuario del sistema.
+
+| Atributo           | Tipo              | Descripción                                         |
+|--------------------|-------------------|-----------------------------------------------------|
+| `id`               | `Int`             | Identificador único del usuario                    |
+| `email`            | `Int`             | Correo electrónico del usuario                     |
+| `username`         | `Int`             | Nombre de usuario único                            |
+| `password`         | `Int`             | Contraseña encriptada                              |
+| `status`           | `UserStatus (enum)`| Estado actual de la cuenta                        |
+| `ver_time`         | `Boolean`         | Verificación de tiempo de sesión                   |
+| `rol_refreshToken` | `Int`             | Referencia al token de refresco activo             |
+| `role`             | `Role (enum)`     | Rol asignado al usuario                            |
+| `create_doc`       | `Instant`         | Fecha y hora de creación de la cuenta              |
+| `lastLogging`      | `Instant`         | Última vez que el usuario inició sesión            |
+| `guestExpiration`  | `Instant`         | Fecha de expiración para cuentas invitadas         |
+
+---
+
+### 👤 `<<Entity>> UserProfile`
+Información del perfil público y preferencias del usuario.
+
+| Atributo        | Tipo      | Descripción                                          |
+|-----------------|-----------|------------------------------------------------------|
+| `userId`        | `String`  | Referencia al usuario propietario del perfil        |
+| `userName`      | `String`  | Nombre visible en el juego                          |
+| `bio`           | `Int`     | Descripción o biografía del jugador                 |
+| `country`       | `String`  | País del usuario                                    |
+| `avatarUrl`     | `String`  | URL del avatar o imagen de perfil                   |
+| `city`          | `String`  | Ciudad del usuario                                  |
+| `notification`  | `Boolean` | Preferencia de notificaciones activadas/desactivadas|
+
+---
+
+### 📊 `<<Entity>> UserStats`
+Estadísticas de juego acumuladas del usuario registrado.
+
+| Atributo       | Tipo  | Descripción                                          |
+|----------------|-------|------------------------------------------------------|
+| `userId`       | `Int` | Referencia al usuario propietario                   |
+| `wins`         | `Int` | Total de victorias                                  |
+| `draws`        | `Int` | Total de empates                                    |
+| `losses`       | `Int` | Total de derrotas                                   |
+| `totalFights`  | `Int` | Total de peleas jugadas                             |
+| `points`       | `Int` | Puntos acumulados (usados para desbloquear personajes)|
+| `level`        | `Int` | Nivel actual del jugador                            |
+| `idMatch`      | `Int` | Referencia a la última partida jugada               |
+
+---
+
+### 🔑 `<<Entity>> RefreshToken`
+Entidad que gestiona los tokens de sesión para mantener autenticación persistente.
+
+| Atributo     | Tipo      | Descripción                                           |
+|--------------|-----------|-------------------------------------------------------|
+| `token`      | `Int`     | Token de refresco generado en el login               |
+| `userId`     | `Int`     | Usuario al que pertenece el token                    |
+| `expiration` | `Instant` | Fecha y hora de expiración del token                 |
+
+---
+
+## Enumeraciones
+
+---
+
+### 🎭 `<<Enum>> Role`
+Define los roles posibles dentro del sistema.
+
+| Valor   | Descripción                                                  |
+|---------|--------------------------------------------------------------|
+| `GUEST` | Usuario invitado sin cuenta registrada; sesión temporal     |
+| `USER`  | Jugador registrado con perfil y estadísticas persistentes   |
+| `ADMIN` | Administrador con acceso a moderación y gestión del sistema |
+
+---
+
+### 🔴 `<<Enum>> UserStatus`
+Define los estados posibles de una cuenta de usuario.
+
+| Valor      | Descripción                                                  |
+|------------|--------------------------------------------------------------|
+| `ACTIVE`   | Cuenta activa y con acceso completo al sistema              |
+| `DELETED`  | Cuenta eliminada; datos marcados para borrado               |
+| `SPENDED`  | Cuenta suspendida temporalmente por sanción                 |
+
+---
+
+## Relaciones entre Clases
+
+| Desde          | Relación        | Hacia          | Descripción                                                |
+|----------------|-----------------|----------------|------------------------------------------------------------|
+| `User`         | Asociación `1—1`| `UserProfile`  | Cada usuario tiene exactamente un perfil                  |
+| `User`         | Asociación `1—1`| `UserStats`    | Cada usuario registrado tiene sus estadísticas propias    |
+| `User`         | Asociación `1—N`| `RefreshToken` | Un usuario puede tener uno o varios tokens activos        |
+| `User`         | Usa `<<enum>>`  | `Role`         | El rol del usuario es uno de los valores del enum Role    |
+| `User`         | Usa `<<enum>>`  | `UserStatus`   | El estado de cuenta usa los valores del enum UserStatus   |
+
+---
