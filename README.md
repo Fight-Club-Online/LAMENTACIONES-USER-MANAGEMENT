@@ -378,3 +378,88 @@ accesible desde el navegador sin instalación.
 | Ver estadísticas del sistema   | Consulta métricas globales de uso y rendimiento    |
 
 ---
+## Diagrama de Despliegue — On-Premise — Fight Club Online
+[📄 Ver documentación (PDF)](docs/UCon_premise.pdf)
+
+### Descripción General
+
+Este diagrama de despliegue muestra la infraestructura física y lógica sobre la
+que corre Fight Club Online en un modelo de despliegue tradicional (On-Premise),
+detallando los nodos de ejecución, los artefactos desplegados en cada uno y los
+protocolos de comunicación entre ellos.
+
+---
+
+### Nodos y Artefactos
+
+### 🖥️ Client: Browser
+Nodo cliente que corre en el navegador del usuario final (Chrome, Firefox, Edge, Safari).
+
+| Artefacto           | Estereotipo     | Descripción                                                  |
+|---------------------|-----------------|--------------------------------------------------------------|
+| Web React App        | `<<Application>>` | Aplicación React que renderiza la UI del juego             |
+| TypeScript SPA       | `<<Artifact>>`    | Single Page Application compilada en TypeScript             |
+
+- **Protocolo de salida:** HTTPS (443) hacia el API Gateway
+
+---
+
+### 🔀 API Gateway Server
+Nodo intermediario que centraliza el enrutamiento de tráfico HTTP y WebSocket.
+Ejecuta Nginx o Node como reverse proxy.
+
+| Artefacto      | Estereotipo     | Descripción                                                       |
+|----------------|-----------------|-------------------------------------------------------------------|
+| gateway.js      | `<<ARTIFACT>>`  | Enruta peticiones HTTP REST hacia el Application Server           |
+| ws-handler.js   | `<<Artifact>>`  | Gestiona la apertura y mantenimiento de conexiones WebSocket      |
+
+- **Protocolo de entrada:** HTTPS (443) desde el cliente
+- **Protocolo de salida:** HTTP (3000) hacia el Application Server
+
+---
+
+### ⚙️ Application Server
+Nodo central de lógica de negocio. Corre sobre Node.js dentro de un contenedor Docker.
+Contiene los módulos del juego como artefactos `.jar` (empaquetados).
+
+| Artefacto        | Estereotipo    | Descripción                                                        |
+|------------------|----------------|--------------------------------------------------------------------|
+| fight.jar         | `<<ARTIFACT>>` | Núcleo del sistema de combate en tiempo real                      |
+| lobby.jar         | `<<Artifact>>` | Gestión de salas, matchmaking, lista de amigos e invitaciones     |
+| user.jar          | `<<Artifact>>` | Registro, autenticación, perfil y estadísticas de usuarios        |
+| supervision.jar   | `<<Artifact>>` | Módulo de moderación: reportes, sanciones y supervisión de chat   |
+
+- **Protocolo de entrada:** HTTP (3000) desde el API Gateway
+- **Protocolo de salida hacia caché:** TCP (puerto Redis) → Cache Server
+- **Protocolo de salida hacia BD:** TCP → Database Server
+
+---
+
+### ⚡ Cache Server
+Nodo de caché en memoria que gestiona sesiones activas y estado temporal de partidas.
+Corre sobre **Redis**.
+
+| Artefacto      | Estereotipo    | Descripción                                                      |
+|----------------|----------------|------------------------------------------------------------------|
+| redis.conf      | `<<ARTIFACT>>` | Archivo de configuración del servidor Redis                     |
+| session-store   | `<<Artifact>>` | Almacén de sesiones activas de jugadores y estado de partidas   |
+
+- **Protocolo de entrada:** TCP desde el Application Server
+- Permite acceso de baja latencia al estado de las peleas en curso
+
+---
+
+### 🗄️ Database Server (Cache Server / MongoDB)
+Nodo de persistencia permanente. Corre sobre **MongoDB**.
+
+| Artefacto      | Estereotipo      | Descripción                                                       |
+|----------------|------------------|-------------------------------------------------------------------|
+| users.db        | `<<ARTIFACT>>`   | Colección de usuarios: perfiles, credenciales y estadísticas     |
+| reports.db      | `<<Artifact>>`   | Colección de reportes y sanciones de moderación                  |
+| mongo.scheme    | `<<Database>>`   | Esquema general de la base de datos MongoDB                      |
+
+- **Protocolo de entrada:** TCP desde el Application Server
+- Persistencia de largo plazo para usuarios, partidas y moderación
+
+---
+
