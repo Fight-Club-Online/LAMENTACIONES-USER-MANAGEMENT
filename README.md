@@ -462,4 +462,152 @@ Nodo de persistencia permanente. Corre sobre **MongoDB**.
 - Persistencia de largo plazo para usuarios, partidas y moderación
 
 ---
+## Diagrama de Despliegue Híbrido
+[📄 Ver documentación (PDF)](docs/UChybrid.pdf)
+### Descripción General
 
+Este diagrama muestra una arquitectura de despliegue híbrida que combina
+infraestructura **On-Premise** (Datacenter propio) con servicios administrados
+en la nube de **Microsoft Azure**. Ambos entornos se conectan mediante
+**AWS Direct Connect** para garantizar comunicación segura y de baja latencia.
+
+---
+
+### Entorno On-Premise (Datacenter Propio)
+
+### 🖥️ Client Web — Navegador Web `<<dispositivo>>`
+
+Nodo cliente ejecutado en el navegador del jugador.
+
+| Artefacto           | Estereotipo     | Descripción                                          |
+|---------------------|-----------------|------------------------------------------------------|
+| React SPA (Fight UI) | `<<Application>>` | Interfaz principal del juego construida en React   |
+| game-client.js       | `<<Artifact>>`  | Lógica del cliente de juego                         |
+| casino-bundle.js     | `<<Artifact>>`  | Bundle de assets y recursos del cliente             |
+| ryuBot-rp.js         | `<<Artifact>>`  | Módulo auxiliar del cliente (bot/replay)            |
+| Navegador Web        | `<<Presentation>>` | Motor de renderizado del navegador               |
+
+---
+
+### 🔀 Servidor API Gateway
+
+Punto de entrada centralizado para todo el tráfico del sistema.
+
+| Artefacto        | Estereotipo   | Descripción                                              |
+|------------------|---------------|----------------------------------------------------------|
+| gateway.js        | `<<Artifact>>`| Enrutador principal de peticiones HTTP                  |
+| ws-handler.js     | `<<Artifact>>`| Manejador de conexiones WebSocket en tiempo real        |
+| rate-limiter.js   | `<<Artifact>>`| Control de límite de solicitudes por usuario            |
+| API Alerta        | `<<Artifact>>`| Sistema de alertas del gateway                         |
+| Router            | `<<HTB>>`     | Enrutador de red                                        |
+| Socket            | `<<socket>>`  | Capa de gestión de sockets                              |
+| Datanode          | `<<storage>>` | Almacenamiento temporal de tráfico                      |
+
+---
+
+### ⚔️ Servidor Fight (On-Premise) — Node.js/Docker
+
+Motor principal del sistema de combate.
+
+| Artefacto          | Estereotipo    | Descripción                                           |
+|--------------------|----------------|-------------------------------------------------------|
+| fight-engine.jar    | `<<Artifact>>` | Motor de lógica de pelea en tiempo real              |
+| Combat-session.js   | `<<Artifact>>` | Gestión de sesiones de combate activas               |
+
+---
+
+### 🏟️ Servidor Lobby (On-Premise)
+
+Gestión de salas, matchmaking y sesiones de lobby.
+
+| Artefacto           | Estereotipo    | Descripción                                          |
+|---------------------|----------------|------------------------------------------------------|
+| lobby-matchMaking.jar| `<<Artifact>>` | Motor de emparejamiento automático de jugadores     |
+| room-session.js      | `<<Artifact>>` | Control de sesiones de sala (pública/privada)       |
+
+---
+
+### ⚡ Servidor Cache — Fight (On-Premise)
+`<<Cache>> Redis — Sesiones de combate`
+
+| Artefacto      | Estereotipo    | Descripción                                            |
+|----------------|----------------|--------------------------------------------------------|
+| combat.cache    | `<<Artifact>>` | Caché de estado de combate activo                     |
+| session-store   | `<<Artifact>>` | Almacén de sesiones en Redis                          |
+| cache           | Nodo físico    | Instancia Redis dedicada al módulo de pelea           |
+
+---
+
+### ⚡ Servidor Cache — Lobby (On-Premise)
+`<<Cache>> Redis — Sesiones de combate`
+
+| Artefacto      | Estereotipo    | Descripción                                            |
+|----------------|----------------|--------------------------------------------------------|
+| players.db      | `<<schema>>`   | Esquema de datos de jugadores en sala                 |
+| matches.list    | `<<datasource>>`| Lista de partidas activas en matchmaking             |
+| cache           | Nodo físico    | Instancia Redis dedicada al módulo de lobby           |
+
+---
+
+### 🎮 Servidor de Juego (On-Premise)
+`<<game server>> Motor de combate`
+
+| Artefacto        | Estereotipo    | Descripción                                          |
+|------------------|----------------|------------------------------------------------------|
+| physics-engine.js | `<<Artifact>>` | Motor de física del combate                        |
+| game-loop.js      | `<<Artifact>>` | Bucle principal del juego (tick rate)              |
+| buffer-sync.js    | `<<Artifact>>` | Sincronización de buffers de entrada entre clientes|
+
+---
+
+### Entorno Cloud — Microsoft Azure
+
+### ☁️ Región AZURE — Microservicios (Contenedores)
+
+Cada módulo corre como un microservicio independiente con CI/CD y análisis de calidad.
+
+| Servicio              | Tecnologías desplegadas              | Descripción                                     |
+|-----------------------|--------------------------------------|-------------------------------------------------|
+| **Fight**             | Docker + SonarQube + JMMD           | Servicio de combate en la nube                 |
+| **Lobby and Matchmaking** | Docker + SonarQube + JMMD       | Servicio de lobby y emparejamiento             |
+| **Supervision and Control** | Docker + SonarQube + JMMD    | Servicio de moderación y control               |
+| **User Management**   | Docker + SonarQube + JMMD           | Servicio de gestión de usuarios y autenticación|
+
+> Cada microservicio incluye:
+> - **JMMD** — Herramienta de monitoreo/métricas
+> - **SonarQube** — Análisis de calidad de código continuo
+> - **Docker** — Contenedor de ejecución
+
+---
+
+### ⚡ Azure Cache for Redis
+
+Dos instancias de Redis administradas por Azure:
+
+| Instancia | Asociada a              | Propósito                                  |
+|-----------|-------------------------|--------------------------------------------|
+| Redis #1  | Módulo Fight            | Caché de estado de peleas en la nube      |
+| Redis #2  | Módulo Supervision/Users| Caché de sesiones de moderación y usuarios|
+
+---
+
+### 🗄️ MongoDB Cluster
+
+Base de datos principal de persistencia, desplegada como cluster en Azure.
+
+| Motor   | Tipo    | Descripción                                                        |
+|---------|---------|--------------------------------------------------------------------|
+| MongoDB | Cluster | Almacena usuarios, reportes, historial de partidas y estadísticas |
+
+---
+
+### 📊 Azure Monitor `<<managed service>>`
+
+Servicio administrado de observabilidad y alertas del sistema.
+
+| Artefacto      | Estereotipo    | Descripción                                          |
+|----------------|----------------|------------------------------------------------------|
+| alerts.log      | `<<Artifact>>` | Registro centralizado de alertas del sistema        |
+| metrics.json    | `<<Artifact>>` | Métricas exportadas de todos los servicios          |
+
+---
