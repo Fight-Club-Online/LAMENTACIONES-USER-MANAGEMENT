@@ -726,3 +726,68 @@ Define los estados posibles de una cuenta de usuario.
 | `User`         | Usa `<<enum>>`  | `UserStatus`   | El estado de cuenta usa los valores del enum UserStatus   |
 
 ---
+## Diagrama de Flujo — Fight Club Online
+
+[📄 Ver documentación (PDF)](docs/Dflujo.pdf)
+
+### Descripción General
+
+Modela el ciclo de vida completo de una sesión en Fight Club Online,
+desde el ingreso hasta el fin del combate. Está dividido en 7 carriles
+que representan los actores del sistema.
+
+---
+
+### Carriles (Swimlanes)
+
+| Carril              | Responsabilidad                                      |
+|---------------------|------------------------------------------------------|
+| **Usuario**          | Ingreso al sistema y navegación general             |
+| **Autenticación**    | Validación de credenciales y gestión de sesión      |
+| **Lobby**            | Creación/unión de partidas e invitación de amigos   |
+| **Departure**        | Combate activo del jugador principal                |
+| **Departure Rival**  | Lógica y acciones del oponente                      |
+| **Departure Viewer** | Participación del espectador con control temporal   |
+| **Carril**           | Reporte de jugadores al finalizar el combate        |
+
+---
+
+### Fases del Flujo
+
+### 1. Autenticación
+El usuario ingresa como **invitado** (sesión temporal) o mediante
+**registro/login** con credenciales validadas. Si los datos son
+incorrectos, el flujo regresa para reintento.
+
+### 2. Lobby
+Una vez autenticado, el jugador puede **crear una sala** (genera código),
+**unirse a una** (valida código) o **invitar amigos** directamente,
+verificando si están conectados y si aceptan la invitación.
+
+### 3. Combate — Jugador
+El jugador selecciona personaje (solo si está desbloqueado) e inicia
+el combate. En cada turno elige entre **movimiento**, **habilidad** o
+**solicitar ayuda** al espectador. Cada acción calcula daño y actualiza
+la barra de vida. El combate termina cuando la vida llega a cero.
+
+### 4. Combate — Rival
+El rival evalúa el estado del combate y elige su estrategia:
+**atacar**, **ejecutar habilidad** o **defenderse**. El daño se
+calcula y aplica de igual forma que en el carril del jugador.
+
+### 5. Combate — Espectador
+Si el jugador solicita ayuda y el espectador acepta, este **toma
+control temporal** del personaje, pudiendo ejecutar movimientos y
+habilidades. Al terminar, devuelve el control al jugador original.
+
+### 6. Chat de Voz (paralelo al combate)
+Tanto el jugador como el espectador pueden activar/desactivar su
+micrófono durante la partida. Los mensajes de voz se transmiten
+a todos los participantes de la sala en tiempo real.
+
+### 7. Reporte
+Al finalizar el combate, cualquier jugador puede reportar a su
+oponente seleccionando un motivo (lenguaje ofensivo, trampa,
+comportamiento, spam o publicidad) y enviando el reporte al sistema.
+
+---
