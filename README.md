@@ -178,6 +178,8 @@ Este diagrama de contexto muestra el sistema **Fight Club Online** como una caja
 central, identificando todos los actores externos que interactúan con él y la naturaleza
 de cada relación.
 
+[📄 Ver documentación (PDF)](docs/ContexD.pdf)
+
 ---
 
 ### Sistema Central
@@ -211,7 +213,168 @@ accesible desde el navegador sin instalación.
 - **Interacción:** Envía configuraciones y comandos de administración al sistema;
   recibe reportes y métricas.
 
-[📄 Ver documentación (PDF)](docs/ContexD.pdf)
+---
+
+## Diagrama de Casos de Uso
+[📄 Ver documentación (PDF)](docs/UserCaseD.pdf)
+
+### Actores del Sistema
+
+| Actor         | Descripción                                                                 |
+|---------------|-----------------------------------------------------------------------------|
+| Visitante      | Accede sin cuenta registrada; funcionalidad limitada                       |
+| Jugador        | Usuario registrado con acceso completo al juego                            |
+| Espectador     | Observa partidas en curso; puede tomar control temporal si se le cede      |
+| Administrador  | Gestiona usuarios, partidas, moderación y configuración del sistema        |
 
 ---
 
+### Casos de Uso por Actor
+
+---
+
+### 👤 Visitante
+
+| Caso de Uso                  | Descripción                                              |
+|------------------------------|----------------------------------------------------------|
+| Ingresar como invitado        | Accede al juego sin crear una cuenta                    |
+| Borrar registro de invitado   | Elimina la sesión temporal de invitado                  |
+| Configurar preferencias       | Ajusta opciones básicas de la sesión                    |
+| Abandonar partida             | Sale de una partida en curso                            |
+| Participar en combate         | Se une a una pelea activa                               |
+| Seleccionar personaje         | Elige el luchador antes del combate                     |
+| Ejecutar movimientos          | Controla los movimientos del personaje                  |
+| Ejecutar habilidades          | Usa habilidades especiales del personaje                |
+| Ver estado de la partida      | Consulta barras de vida, ronda y marcador               |
+
+> El visitante tiene acceso restringido: no conserva historial, estadísticas ni progreso al finalizar la sesión.
+
+---
+
+### 🎮 Jugador
+
+#### Gestión de Usuarios y Accesos
+
+| Caso de Uso          | Descripción                                         |
+|----------------------|-----------------------------------------------------|
+| Registrarse           | Crea una cuenta con correo o Google OAuth          |
+| Iniciar sesión        | Accede con sus credenciales                        |
+| Cerrar sesión         | Finaliza la sesión activa                          |
+| Recuperar contraseña  | Restablece el acceso a su cuenta                  |
+| Editar perfil         | Modifica datos personales y preferencias           |
+
+#### Experiencia de Lobby y Matchmaking
+
+| Caso de Uso                    | Descripción                                              |
+|--------------------------------|----------------------------------------------------------|
+| Configurar preferencias         | Ajusta opciones de sonido, controles, etc.              |
+| Crear partida                   | Abre una sala pública o privada con código              |
+| Configurar partida              | Define reglas antes de iniciar el combate               |
+| Abandonar partida               | Sale de la sala o búsqueda de matchmaking               |
+| Invitar amigos                  | Envía invitación directa a una sala privada             |
+| Aceptar / rechazar invitaciones | Gestiona invitaciones entrantes a salas                 |
+| Agregar amigos                  | Envía solicitud de amistad a otro jugador               |
+| Eliminar amigos                 | Remueve un contacto de su lista                         |
+| Ver lista de amigos             | Consulta sus contactos y su estado en línea             |
+| Aceptar / rechazar amigos       | Gestiona solicitudes de amistad recibidas               |
+| Desbloquear personajes          | Accede a nuevos luchadores con puntos ganados           |
+
+#### Sistema de Combate y Partidas Activas
+
+| Caso de Uso                    | Descripción                                              |
+|--------------------------------|----------------------------------------------------------|
+| Participar en combate           | Entra activamente a una pelea                           |
+| Seleccionar personaje           | Elige su luchador antes del combate                     |
+| Ejecutar movimientos            | Controla desplazamiento y acciones físicas              |
+| Ejecutar habilidades            | Usa ataques especiales del personaje                    |
+| Ver estado de la partida        | Monitorea barras de vida y ronda actual                 |
+| Activar / desactivar micrófono  | Controla su participación en el chat de voz             |
+| Hablar en chat de voz           | Se comunica con otros jugadores por audio               |
+| Recuperar control               | Retoma el control de su personaje cedido temporalmente  |
+| Interrumpir ayuda               | Cancela la solicitud de asistencia al espectador        |
+
+#### Supervisión y Control
+
+| Caso de Uso        | Descripción                                        |
+|--------------------|----------------------------------------------------|
+| Reportar usuarios   | Envía reporte de conducta sobre otro jugador      |
+| Denunciar usuarios  | Genera una denuncia formal dentro del sistema     |
+
+> Funciones adicionales relacionadas con el espectador
+> (escuchar, silenciar, solicitar ayuda, transferir control)
+> se activan durante una partida activa.
+
+---
+
+### 👁️ Espectador
+
+#### Observación de Partidas
+
+| Caso de Uso                | Descripción                                              |
+|----------------------------|----------------------------------------------------------|
+| Ver partida en tiempo real  | Observa el combate en curso sin participar              |
+| Ver estado de los jugadores | Consulta barras de vida y estadísticas en vivo          |
+| Cambiar perspectiva         | Alterna la vista de cámara dentro de la partida         |
+| Escuchar chat de voz        | Oye la comunicación de audio de los jugadores           |
+| Hablar en chat de voz       | Participa en el canal de voz de la sala                 |
+| Silenciar jugadores         | Silencia el audio de uno o varios participantes         |
+| Ejecutar movimientos        | Disponible solo al tomar control temporal               |
+| Ejecutar habilidades        | Disponible solo al tomar control temporal               |
+
+#### Control Temporal (si el jugador solicita ayuda)
+
+| Caso de Uso                        | Descripción                                          |
+|------------------------------------|------------------------------------------------------|
+| Recibir solicitud de ayuda          | Le llega una petición del jugador activo            |
+| Aceptar / rechazar solicitud        | Decide si asume el control del personaje            |
+| Tomar control del jugador temp.     | Controla el luchador mientras el jugador descansa   |
+| Combatir temporalmente              | Ejecuta acciones en nombre del jugador              |
+| Devolver control al jugador         | Regresa el mando al jugador original                |
+| Seleccionar personaje               | Solo si se le permite antes de tomar el control     |
+| Ver estado de la partida            | Monitorea el combate mientras tiene el control      |
+| Ver estadísticas                    | Consulta métricas del combate en curso              |
+
+---
+
+### 🛠️ Administrador
+
+#### Gestión de Usuarios
+
+| Caso de Uso        | Descripción                                     |
+|--------------------|-------------------------------------------------|
+| Ver usuarios        | Lista todos los jugadores registrados          |
+| Editar usuarios     | Modifica datos de cuentas                      |
+| Eliminar usuarios   | Borra cuentas del sistema                      |
+| Sancionar usuarios  | Aplica advertencias o restricciones            |
+
+#### Gestión de Partidas
+
+| Caso de Uso              | Descripción                                     |
+|--------------------------|-------------------------------------------------|
+| Unir a partidas           | Se une a una sala activa para supervisar       |
+| Supervisar partidas       | Monitorea partidas en curso en tiempo real     |
+| Reiniciar partidas        | Fuerza el reinicio de una sala con problemas   |
+| Configurar reglas de juego| Define parámetros globales del combate         |
+
+#### Moderación de Canales de Comunicación
+
+| Caso de Uso              | Descripción                                      |
+|--------------------------|--------------------------------------------------|
+| Supervisar canales de voz | Escucha canales de audio para detectar abusos  |
+| Bloquear chat de voz      | Silencia o restringe el canal de voz de una sala|
+| Monitorear actividad      | Revisa logs y actividad general del sistema     |
+
+#### Supervisión y Control del Sistema
+
+| Caso de Uso                   | Descripción                                         |
+|-------------------------------|-----------------------------------------------------|
+| Banear cuentas                 | Aplica baneo permanente a un usuario               |
+| Desbanear cuentas              | Revierte un baneo previo                           |
+| Ver reportes                   | Consulta reportes pendientes de revisión           |
+| Revisar reportes               | Analiza el detalle de reportes recibidos           |
+| Suspender cuentas              | Aplica suspensión temporal a un usuario            |
+| Configurar parámetros del sistema | Ajusta configuraciones globales de la plataforma|
+| Gestionar roles                | Asigna o revoca roles (moderador, admin, etc.)     |
+| Ver estadísticas del sistema   | Consulta métricas globales de uso y rendimiento    |
+
+---
