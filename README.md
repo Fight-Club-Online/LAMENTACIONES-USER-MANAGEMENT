@@ -168,3 +168,50 @@ El módulo **Lamentaciones** maneja una arquitectura **hexagonal / clean** que d
 ```bash
 git clone https://github.com/JuanCaballero9778/LAMENTACIONES-USER-MANAGEMENT.git
 cd LAMENTACIONES-USER-MANAGEMENT
+```
+--- 
+## Diagrama de Contexto — Fight Club Online
+
+### Descripción General
+
+Este diagrama de contexto muestra el sistema **Fight Club Online** como una caja negra
+central, identificando todos los actores externos que interactúan con él y la naturaleza
+de cada relación.
+
+---
+
+### Sistema Central
+
+**Fight Club** — Plataforma web de juego de lucha multijugador en tiempo real,
+accesible desde el navegador sin instalación.
+
+---
+
+### Actores Externos
+
+### 👤 Visitante
+- Accede al juego sin estar registrado.
+- Puede explorar información, ver personajes, consultar rankings o registrarse para jugar.
+- **Interacción:** Envía solicitudes de consulta y registro hacia el sistema.
+
+### 🎮 Jugador
+- Usuario registrado o invitado activo dentro del juego.
+- Puede seleccionar personajes, controlar su luchador y participar en peleas.
+- **Interacción:** Envía acciones de juego (movimientos, ataques) y recibe
+  el estado sincronizado de la pelea en tiempo real.
+
+### 👁️ Espectador
+- Observa las peleas en tiempo real sin participar directamente en el combate.
+- Puede eventualmente unirse como jugador.
+- **Interacción:** Recibe el estado del juego en modo solo lectura.
+
+### 🛠️ Administrador
+- Gestiona y supervisa la plataforma desde un panel de control.
+- Puede monitorear el juego, revisar estadísticas y gestionar actualizaciones o contenido.
+- **Interacción:** Envía configuraciones y comandos de administración al sistema;
+  recibe reportes y métricas.
+
+[📄 Ver documentación (PDF)](docs/ContexD.pdf)
+
+---
+
