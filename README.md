@@ -842,3 +842,62 @@ Cada servicio incluye **JaCoCo** (cobertura de pruebas), **SonarQube**
 Ambas instancias se conectan a los microservicios mediante **Driver/Mongo**.
 
 ---
+
+## Diagrama de Despliegue en la Nube — Azure
+
+[📄 Ver documentación (PDF)](docs/DdespliegueN.pdf)
+
+### Descripción General
+
+Despliegue completamente gestionado en **Microsoft Azure**, distribuido
+en múltiples zonas de disponibilidad (AZ) para garantizar alta
+disponibilidad y resiliencia del servicio.
+
+---
+
+### Componentes del Sistema
+
+### 🌐 Cliente
+**Web React** se comunica vía HTTPS hacia el API Gateway central,
+y también recibe eventos en tiempo real a través del servicio
+**AWeb PubSub** (WebSocket administrado por Azure).
+
+---
+
+### 🔀 API Gateway
+Enruta el tráfico entrante del cliente hacia los microservicios
+distribuidos en las zonas de disponibilidad AZ1 y AZ2.
+
+---
+
+### ☁️ Zonas de Disponibilidad
+
+#### AZ1
+| Microservicio | Herramientas                        | Caché                   |
+|---------------|-------------------------------------|-------------------------|
+| **Fight**     | Docker, JaCoCo, SonarQube           | Azure Cache for Redis   |
+
+#### AZ2
+| Microservicio              | Herramientas              | Caché                   |
+|----------------------------|---------------------------|-------------------------|
+| **Lobby and Matchmaking**  | Docker, JaCoCo, SonarQube | Azure Cache for Redis   |
+| **Supervision and Control**| Docker, JaCoCo, SonarQube | (comparte Redis AZ2)    |
+| **User Management**        | Docker, JaCoCo, SonarQube | (comparte Redis AZ2)    |
+
+Cada zona cuenta con su propia instancia de **Azure Cache for Redis**
+para aislar el estado de combate (AZ1) del estado de lobby,
+moderación y usuarios (AZ2).
+
+---
+
+### 🗄️ Persistencia y Observabilidad
+
+| Servicio           | Rol                                                              |
+|--------------------|------------------------------------------------------------------|
+| **MongoDB Cluster** | Base de datos principal de persistencia para todos los módulos |
+| **Azure Monitor**   | Observabilidad centralizada: métricas, logs y alertas          |
+
+Azure Monitor se conecta tanto al MongoDB Cluster como a los
+microservicios para recolectar métricas en tiempo real.
+
+---
