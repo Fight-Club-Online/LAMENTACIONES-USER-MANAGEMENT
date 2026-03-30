@@ -35,9 +35,4 @@ public class UserEventPublisher {
     public void publishUserProfileUpdated(UserRegisteredEvent event) {
         rabbitTemplate.convertAndSend(USER_EXCHANGE, "user.profile.updated", event);
     }
-     @Bean
-    public MessageConverter jsonMessageConverter() {
-        return new Jackson2JsonMessageConverter();
-    }
-
 }

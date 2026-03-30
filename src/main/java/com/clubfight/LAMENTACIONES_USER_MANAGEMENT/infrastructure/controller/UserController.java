@@ -36,6 +36,7 @@ public class UserController {
                 .email(request.getEmail())
                 .username(request.getUsername())
                 .password(request.getPassword())
+                .avatarURL(request.getAvatarURL())
                 .build();
 
         AuthResponse response = registerUserUseCase.register(command);

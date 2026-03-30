@@ -84,6 +84,13 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
+		
+		<!-- Azure Storage -->
+		<dependency>
+			<groupId>com.azure</groupId>
+			<artifactId>azure-storage-blob</artifactId>
+			<version>12.25.1</version>
+		</dependency>
 
 		<!-- JWT -->
         <dependency>
@@ -179,6 +186,8 @@
 								<exclude>**/infrastructure/controller/dto/response/**</exclude>
                                 <exclude>**/infrastructure/adapters/messaging/**</exclude>
                                 <exclude>**/LamentacionesUserManagementApplication.class</exclude>
+							    <exclude>**/AzureBlobService.class</exclude>
+                                <exclude>**/AvatarController.class</exclude>
 							</excludes>
 						</configuration>
 					</execution>
@@ -212,6 +221,8 @@
 								<exclude>**/infrastructure/controller/dto/response/**</exclude>
                                 <exclude>**/infrastructure/adapters/messaging/**</exclude>
                                 <exclude>**/LamentacionesUserManagementApplication.class</exclude>
+							    <exclude>**/AzureBlobService.class</exclude>
+                                <exclude>**/AvatarController.class</exclude>								
 							</excludes>
 						</configuration>
 					</execution>
