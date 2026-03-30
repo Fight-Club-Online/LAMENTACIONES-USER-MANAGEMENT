@@ -178,6 +178,8 @@ Este diagrama de contexto muestra el sistema **Fight Club Online** como una caja
 central, identificando todos los actores externos que interactúan con él y la naturaleza
 de cada relación.
 
+[📄 Ver documentación (PDF)](docs/ContexD.pdf)
+
 ---
 
 ### Sistema Central
@@ -211,7 +213,778 @@ accesible desde el navegador sin instalación.
 - **Interacción:** Envía configuraciones y comandos de administración al sistema;
   recibe reportes y métricas.
 
-[📄 Ver documentación (PDF)](docs/ContexD.pdf)
+---
+
+## Diagrama de Casos de Uso
+[📄 Ver documentación (PDF)](docs/UserCaseD.pdf)
+
+### Actores del Sistema
+
+| Actor         | Descripción                                                                 |
+|---------------|-----------------------------------------------------------------------------|
+| Visitante      | Accede sin cuenta registrada; funcionalidad limitada                       |
+| Jugador        | Usuario registrado con acceso completo al juego                            |
+| Espectador     | Observa partidas en curso; puede tomar control temporal si se le cede      |
+| Administrador  | Gestiona usuarios, partidas, moderación y configuración del sistema        |
 
 ---
 
+### Casos de Uso por Actor
+
+---
+
+### 👤 Visitante
+
+| Caso de Uso                  | Descripción                                              |
+|------------------------------|----------------------------------------------------------|
+| Ingresar como invitado        | Accede al juego sin crear una cuenta                    |
+| Borrar registro de invitado   | Elimina la sesión temporal de invitado                  |
+| Configurar preferencias       | Ajusta opciones básicas de la sesión                    |
+| Abandonar partida             | Sale de una partida en curso                            |
+| Participar en combate         | Se une a una pelea activa                               |
+| Seleccionar personaje         | Elige el luchador antes del combate                     |
+| Ejecutar movimientos          | Controla los movimientos del personaje                  |
+| Ejecutar habilidades          | Usa habilidades especiales del personaje                |
+| Ver estado de la partida      | Consulta barras de vida, ronda y marcador               |
+
+> El visitante tiene acceso restringido: no conserva historial, estadísticas ni progreso al finalizar la sesión.
+
+---
+
+### 🎮 Jugador
+
+#### Gestión de Usuarios y Accesos
+
+| Caso de Uso          | Descripción                                         |
+|----------------------|-----------------------------------------------------|
+| Registrarse           | Crea una cuenta con correo o Google OAuth          |
+| Iniciar sesión        | Accede con sus credenciales                        |
+| Cerrar sesión         | Finaliza la sesión activa                          |
+| Recuperar contraseña  | Restablece el acceso a su cuenta                  |
+| Editar perfil         | Modifica datos personales y preferencias           |
+
+#### Experiencia de Lobby y Matchmaking
+
+| Caso de Uso                    | Descripción                                              |
+|--------------------------------|----------------------------------------------------------|
+| Configurar preferencias         | Ajusta opciones de sonido, controles, etc.              |
+| Crear partida                   | Abre una sala pública o privada con código              |
+| Configurar partida              | Define reglas antes de iniciar el combate               |
+| Abandonar partida               | Sale de la sala o búsqueda de matchmaking               |
+| Invitar amigos                  | Envía invitación directa a una sala privada             |
+| Aceptar / rechazar invitaciones | Gestiona invitaciones entrantes a salas                 |
+| Agregar amigos                  | Envía solicitud de amistad a otro jugador               |
+| Eliminar amigos                 | Remueve un contacto de su lista                         |
+| Ver lista de amigos             | Consulta sus contactos y su estado en línea             |
+| Aceptar / rechazar amigos       | Gestiona solicitudes de amistad recibidas               |
+| Desbloquear personajes          | Accede a nuevos luchadores con puntos ganados           |
+
+#### Sistema de Combate y Partidas Activas
+
+| Caso de Uso                    | Descripción                                              |
+|--------------------------------|----------------------------------------------------------|
+| Participar en combate           | Entra activamente a una pelea                           |
+| Seleccionar personaje           | Elige su luchador antes del combate                     |
+| Ejecutar movimientos            | Controla desplazamiento y acciones físicas              |
+| Ejecutar habilidades            | Usa ataques especiales del personaje                    |
+| Ver estado de la partida        | Monitorea barras de vida y ronda actual                 |
+| Activar / desactivar micrófono  | Controla su participación en el chat de voz             |
+| Hablar en chat de voz           | Se comunica con otros jugadores por audio               |
+| Recuperar control               | Retoma el control de su personaje cedido temporalmente  |
+| Interrumpir ayuda               | Cancela la solicitud de asistencia al espectador        |
+
+#### Supervisión y Control
+
+| Caso de Uso        | Descripción                                        |
+|--------------------|----------------------------------------------------|
+| Reportar usuarios   | Envía reporte de conducta sobre otro jugador      |
+| Denunciar usuarios  | Genera una denuncia formal dentro del sistema     |
+
+> Funciones adicionales relacionadas con el espectador
+> (escuchar, silenciar, solicitar ayuda, transferir control)
+> se activan durante una partida activa.
+
+---
+
+### 👁️ Espectador
+
+#### Observación de Partidas
+
+| Caso de Uso                | Descripción                                              |
+|----------------------------|----------------------------------------------------------|
+| Ver partida en tiempo real  | Observa el combate en curso sin participar              |
+| Ver estado de los jugadores | Consulta barras de vida y estadísticas en vivo          |
+| Cambiar perspectiva         | Alterna la vista de cámara dentro de la partida         |
+| Escuchar chat de voz        | Oye la comunicación de audio de los jugadores           |
+| Hablar en chat de voz       | Participa en el canal de voz de la sala                 |
+| Silenciar jugadores         | Silencia el audio de uno o varios participantes         |
+| Ejecutar movimientos        | Disponible solo al tomar control temporal               |
+| Ejecutar habilidades        | Disponible solo al tomar control temporal               |
+
+#### Control Temporal (si el jugador solicita ayuda)
+
+| Caso de Uso                        | Descripción                                          |
+|------------------------------------|------------------------------------------------------|
+| Recibir solicitud de ayuda          | Le llega una petición del jugador activo            |
+| Aceptar / rechazar solicitud        | Decide si asume el control del personaje            |
+| Tomar control del jugador temp.     | Controla el luchador mientras el jugador descansa   |
+| Combatir temporalmente              | Ejecuta acciones en nombre del jugador              |
+| Devolver control al jugador         | Regresa el mando al jugador original                |
+| Seleccionar personaje               | Solo si se le permite antes de tomar el control     |
+| Ver estado de la partida            | Monitorea el combate mientras tiene el control      |
+| Ver estadísticas                    | Consulta métricas del combate en curso              |
+
+---
+
+### 🛠️ Administrador
+
+#### Gestión de Usuarios
+
+| Caso de Uso        | Descripción                                     |
+|--------------------|-------------------------------------------------|
+| Ver usuarios        | Lista todos los jugadores registrados          |
+| Editar usuarios     | Modifica datos de cuentas                      |
+| Eliminar usuarios   | Borra cuentas del sistema                      |
+| Sancionar usuarios  | Aplica advertencias o restricciones            |
+
+#### Gestión de Partidas
+
+| Caso de Uso              | Descripción                                     |
+|--------------------------|-------------------------------------------------|
+| Unir a partidas           | Se une a una sala activa para supervisar       |
+| Supervisar partidas       | Monitorea partidas en curso en tiempo real     |
+| Reiniciar partidas        | Fuerza el reinicio de una sala con problemas   |
+| Configurar reglas de juego| Define parámetros globales del combate         |
+
+#### Moderación de Canales de Comunicación
+
+| Caso de Uso              | Descripción                                      |
+|--------------------------|--------------------------------------------------|
+| Supervisar canales de voz | Escucha canales de audio para detectar abusos  |
+| Bloquear chat de voz      | Silencia o restringe el canal de voz de una sala|
+| Monitorear actividad      | Revisa logs y actividad general del sistema     |
+
+#### Supervisión y Control del Sistema
+
+| Caso de Uso                   | Descripción                                         |
+|-------------------------------|-----------------------------------------------------|
+| Banear cuentas                 | Aplica baneo permanente a un usuario               |
+| Desbanear cuentas              | Revierte un baneo previo                           |
+| Ver reportes                   | Consulta reportes pendientes de revisión           |
+| Revisar reportes               | Analiza el detalle de reportes recibidos           |
+| Suspender cuentas              | Aplica suspensión temporal a un usuario            |
+| Configurar parámetros del sistema | Ajusta configuraciones globales de la plataforma|
+| Gestionar roles                | Asigna o revoca roles (moderador, admin, etc.)     |
+| Ver estadísticas del sistema   | Consulta métricas globales de uso y rendimiento    |
+
+---
+## Diagrama de Despliegue — On-Premise — Fight Club Online
+[📄 Ver documentación (PDF)](docs/UCon_premise.pdf)
+
+### Descripción General
+
+Este diagrama de despliegue muestra la infraestructura física y lógica sobre la
+que corre Fight Club Online en un modelo de despliegue tradicional (On-Premise),
+detallando los nodos de ejecución, los artefactos desplegados en cada uno y los
+protocolos de comunicación entre ellos.
+
+---
+
+### Nodos y Artefactos
+
+### 🖥️ Client: Browser
+Nodo cliente que corre en el navegador del usuario final (Chrome, Firefox, Edge, Safari).
+
+| Artefacto           | Estereotipo     | Descripción                                                  |
+|---------------------|-----------------|--------------------------------------------------------------|
+| Web React App        | `<<Application>>` | Aplicación React que renderiza la UI del juego             |
+| TypeScript SPA       | `<<Artifact>>`    | Single Page Application compilada en TypeScript             |
+
+- **Protocolo de salida:** HTTPS (443) hacia el API Gateway
+
+---
+
+### 🔀 API Gateway Server
+Nodo intermediario que centraliza el enrutamiento de tráfico HTTP y WebSocket.
+Ejecuta Nginx o Node como reverse proxy.
+
+| Artefacto      | Estereotipo     | Descripción                                                       |
+|----------------|-----------------|-------------------------------------------------------------------|
+| gateway.js      | `<<ARTIFACT>>`  | Enruta peticiones HTTP REST hacia el Application Server           |
+| ws-handler.js   | `<<Artifact>>`  | Gestiona la apertura y mantenimiento de conexiones WebSocket      |
+
+- **Protocolo de entrada:** HTTPS (443) desde el cliente
+- **Protocolo de salida:** HTTP (3000) hacia el Application Server
+
+---
+
+### ⚙️ Application Server
+Nodo central de lógica de negocio. Corre sobre Node.js dentro de un contenedor Docker.
+Contiene los módulos del juego como artefactos `.jar` (empaquetados).
+
+| Artefacto        | Estereotipo    | Descripción                                                        |
+|------------------|----------------|--------------------------------------------------------------------|
+| fight.jar         | `<<ARTIFACT>>` | Núcleo del sistema de combate en tiempo real                      |
+| lobby.jar         | `<<Artifact>>` | Gestión de salas, matchmaking, lista de amigos e invitaciones     |
+| user.jar          | `<<Artifact>>` | Registro, autenticación, perfil y estadísticas de usuarios        |
+| supervision.jar   | `<<Artifact>>` | Módulo de moderación: reportes, sanciones y supervisión de chat   |
+
+- **Protocolo de entrada:** HTTP (3000) desde el API Gateway
+- **Protocolo de salida hacia caché:** TCP (puerto Redis) → Cache Server
+- **Protocolo de salida hacia BD:** TCP → Database Server
+
+---
+
+### ⚡ Cache Server
+Nodo de caché en memoria que gestiona sesiones activas y estado temporal de partidas.
+Corre sobre **Redis**.
+
+| Artefacto      | Estereotipo    | Descripción                                                      |
+|----------------|----------------|------------------------------------------------------------------|
+| redis.conf      | `<<ARTIFACT>>` | Archivo de configuración del servidor Redis                     |
+| session-store   | `<<Artifact>>` | Almacén de sesiones activas de jugadores y estado de partidas   |
+
+- **Protocolo de entrada:** TCP desde el Application Server
+- Permite acceso de baja latencia al estado de las peleas en curso
+
+---
+
+### 🗄️ Database Server (Cache Server / MongoDB)
+Nodo de persistencia permanente. Corre sobre **MongoDB**.
+
+| Artefacto      | Estereotipo      | Descripción                                                       |
+|----------------|------------------|-------------------------------------------------------------------|
+| users.db        | `<<ARTIFACT>>`   | Colección de usuarios: perfiles, credenciales y estadísticas     |
+| reports.db      | `<<Artifact>>`   | Colección de reportes y sanciones de moderación                  |
+| mongo.scheme    | `<<Database>>`   | Esquema general de la base de datos MongoDB                      |
+
+- **Protocolo de entrada:** TCP desde el Application Server
+- Persistencia de largo plazo para usuarios, partidas y moderación
+
+---
+## Diagrama de Despliegue Híbrido
+[📄 Ver documentación (PDF)](docs/UChybrid.pdf)
+### Descripción General
+
+Este diagrama muestra una arquitectura de despliegue híbrida que combina
+infraestructura **On-Premise** (Datacenter propio) con servicios administrados
+en la nube de **Microsoft Azure**. Ambos entornos se conectan mediante
+**AWS Direct Connect** para garantizar comunicación segura y de baja latencia.
+
+---
+
+### Entorno On-Premise (Datacenter Propio)
+
+### 🖥️ Client Web — Navegador Web `<<dispositivo>>`
+
+Nodo cliente ejecutado en el navegador del jugador.
+
+| Artefacto           | Estereotipo     | Descripción                                          |
+|---------------------|-----------------|------------------------------------------------------|
+| React SPA (Fight UI) | `<<Application>>` | Interfaz principal del juego construida en React   |
+| game-client.js       | `<<Artifact>>`  | Lógica del cliente de juego                         |
+| casino-bundle.js     | `<<Artifact>>`  | Bundle de assets y recursos del cliente             |
+| ryuBot-rp.js         | `<<Artifact>>`  | Módulo auxiliar del cliente (bot/replay)            |
+| Navegador Web        | `<<Presentation>>` | Motor de renderizado del navegador               |
+
+---
+
+### 🔀 Servidor API Gateway
+
+Punto de entrada centralizado para todo el tráfico del sistema.
+
+| Artefacto        | Estereotipo   | Descripción                                              |
+|------------------|---------------|----------------------------------------------------------|
+| gateway.js        | `<<Artifact>>`| Enrutador principal de peticiones HTTP                  |
+| ws-handler.js     | `<<Artifact>>`| Manejador de conexiones WebSocket en tiempo real        |
+| rate-limiter.js   | `<<Artifact>>`| Control de límite de solicitudes por usuario            |
+| API Alerta        | `<<Artifact>>`| Sistema de alertas del gateway                         |
+| Router            | `<<HTB>>`     | Enrutador de red                                        |
+| Socket            | `<<socket>>`  | Capa de gestión de sockets                              |
+| Datanode          | `<<storage>>` | Almacenamiento temporal de tráfico                      |
+
+---
+
+### ⚔️ Servidor Fight (On-Premise) — Node.js/Docker
+
+Motor principal del sistema de combate.
+
+| Artefacto          | Estereotipo    | Descripción                                           |
+|--------------------|----------------|-------------------------------------------------------|
+| fight-engine.jar    | `<<Artifact>>` | Motor de lógica de pelea en tiempo real              |
+| Combat-session.js   | `<<Artifact>>` | Gestión de sesiones de combate activas               |
+
+---
+
+### 🏟️ Servidor Lobby (On-Premise)
+
+Gestión de salas, matchmaking y sesiones de lobby.
+
+| Artefacto           | Estereotipo    | Descripción                                          |
+|---------------------|----------------|------------------------------------------------------|
+| lobby-matchMaking.jar| `<<Artifact>>` | Motor de emparejamiento automático de jugadores     |
+| room-session.js      | `<<Artifact>>` | Control de sesiones de sala (pública/privada)       |
+
+---
+
+### ⚡ Servidor Cache — Fight (On-Premise)
+`<<Cache>> Redis — Sesiones de combate`
+
+| Artefacto      | Estereotipo    | Descripción                                            |
+|----------------|----------------|--------------------------------------------------------|
+| combat.cache    | `<<Artifact>>` | Caché de estado de combate activo                     |
+| session-store   | `<<Artifact>>` | Almacén de sesiones en Redis                          |
+| cache           | Nodo físico    | Instancia Redis dedicada al módulo de pelea           |
+
+---
+
+### ⚡ Servidor Cache — Lobby (On-Premise)
+`<<Cache>> Redis — Sesiones de combate`
+
+| Artefacto      | Estereotipo    | Descripción                                            |
+|----------------|----------------|--------------------------------------------------------|
+| players.db      | `<<schema>>`   | Esquema de datos de jugadores en sala                 |
+| matches.list    | `<<datasource>>`| Lista de partidas activas en matchmaking             |
+| cache           | Nodo físico    | Instancia Redis dedicada al módulo de lobby           |
+
+---
+
+### 🎮 Servidor de Juego (On-Premise)
+`<<game server>> Motor de combate`
+
+| Artefacto        | Estereotipo    | Descripción                                          |
+|------------------|----------------|------------------------------------------------------|
+| physics-engine.js | `<<Artifact>>` | Motor de física del combate                        |
+| game-loop.js      | `<<Artifact>>` | Bucle principal del juego (tick rate)              |
+| buffer-sync.js    | `<<Artifact>>` | Sincronización de buffers de entrada entre clientes|
+
+---
+
+### Entorno Cloud — Microsoft Azure
+
+### ☁️ Región AZURE — Microservicios (Contenedores)
+
+Cada módulo corre como un microservicio independiente con CI/CD y análisis de calidad.
+
+| Servicio              | Tecnologías desplegadas              | Descripción                                     |
+|-----------------------|--------------------------------------|-------------------------------------------------|
+| **Fight**             | Docker + SonarQube + JMMD           | Servicio de combate en la nube                 |
+| **Lobby and Matchmaking** | Docker + SonarQube + JMMD       | Servicio de lobby y emparejamiento             |
+| **Supervision and Control** | Docker + SonarQube + JMMD    | Servicio de moderación y control               |
+| **User Management**   | Docker + SonarQube + JMMD           | Servicio de gestión de usuarios y autenticación|
+
+> Cada microservicio incluye:
+> - **JMMD** — Herramienta de monitoreo/métricas
+> - **SonarQube** — Análisis de calidad de código continuo
+> - **Docker** — Contenedor de ejecución
+
+---
+
+### ⚡ Azure Cache for Redis
+
+Dos instancias de Redis administradas por Azure:
+
+| Instancia | Asociada a              | Propósito                                  |
+|-----------|-------------------------|--------------------------------------------|
+| Redis #1  | Módulo Fight            | Caché de estado de peleas en la nube      |
+| Redis #2  | Módulo Supervision/Users| Caché de sesiones de moderación y usuarios|
+
+---
+
+### 🗄️ MongoDB Cluster
+
+Base de datos principal de persistencia, desplegada como cluster en Azure.
+
+| Motor   | Tipo    | Descripción                                                        |
+|---------|---------|--------------------------------------------------------------------|
+| MongoDB | Cluster | Almacena usuarios, reportes, historial de partidas y estadísticas |
+
+---
+
+### 📊 Azure Monitor `<<managed service>>`
+
+Servicio administrado de observabilidad y alertas del sistema.
+
+| Artefacto      | Estereotipo    | Descripción                                          |
+|----------------|----------------|------------------------------------------------------|
+| alerts.log      | `<<Artifact>>` | Registro centralizado de alertas del sistema        |
+| metrics.json    | `<<Artifact>>` | Métricas exportadas de todos los servicios          |
+
+---
+## Diagrama de Clases — Módulo de Login / Usuarios
+
+[📄 Ver documentación (PDF)](docs/DclasesLogin.pdf)
+
+### Descripción General
+
+Este diagrama modela las entidades del dominio relacionadas con la autenticación,
+gestión de sesiones y perfil de usuario en Fight Club Online. Cubre el ciclo
+completo: desde el registro (invitado o registrado) hasta la gestión de tokens,
+roles y estados de cuenta.
+
+---
+
+## Entidades
+
+---
+
+### 📋 `<<Entity>> User`
+Entidad central del módulo. Representa a cualquier usuario del sistema.
+
+| Atributo           | Tipo              | Descripción                                         |
+|--------------------|-------------------|-----------------------------------------------------|
+| `id`               | `Int`             | Identificador único del usuario                    |
+| `email`            | `Int`             | Correo electrónico del usuario                     |
+| `username`         | `Int`             | Nombre de usuario único                            |
+| `password`         | `Int`             | Contraseña encriptada                              |
+| `status`           | `UserStatus (enum)`| Estado actual de la cuenta                        |
+| `ver_time`         | `Boolean`         | Verificación de tiempo de sesión                   |
+| `rol_refreshToken` | `Int`             | Referencia al token de refresco activo             |
+| `role`             | `Role (enum)`     | Rol asignado al usuario                            |
+| `create_doc`       | `Instant`         | Fecha y hora de creación de la cuenta              |
+| `lastLogging`      | `Instant`         | Última vez que el usuario inició sesión            |
+| `guestExpiration`  | `Instant`         | Fecha de expiración para cuentas invitadas         |
+
+---
+
+### 👤 `<<Entity>> UserProfile`
+Información del perfil público y preferencias del usuario.
+
+| Atributo        | Tipo      | Descripción                                          |
+|-----------------|-----------|------------------------------------------------------|
+| `userId`        | `String`  | Referencia al usuario propietario del perfil        |
+| `userName`      | `String`  | Nombre visible en el juego                          |
+| `bio`           | `Int`     | Descripción o biografía del jugador                 |
+| `country`       | `String`  | País del usuario                                    |
+| `avatarUrl`     | `String`  | URL del avatar o imagen de perfil                   |
+| `city`          | `String`  | Ciudad del usuario                                  |
+| `notification`  | `Boolean` | Preferencia de notificaciones activadas/desactivadas|
+
+---
+
+### 📊 `<<Entity>> UserStats`
+Estadísticas de juego acumuladas del usuario registrado.
+
+| Atributo       | Tipo  | Descripción                                          |
+|----------------|-------|------------------------------------------------------|
+| `userId`       | `Int` | Referencia al usuario propietario                   |
+| `wins`         | `Int` | Total de victorias                                  |
+| `draws`        | `Int` | Total de empates                                    |
+| `losses`       | `Int` | Total de derrotas                                   |
+| `totalFights`  | `Int` | Total de peleas jugadas                             |
+| `points`       | `Int` | Puntos acumulados (usados para desbloquear personajes)|
+| `level`        | `Int` | Nivel actual del jugador                            |
+| `idMatch`      | `Int` | Referencia a la última partida jugada               |
+
+---
+
+### 🔑 `<<Entity>> RefreshToken`
+Entidad que gestiona los tokens de sesión para mantener autenticación persistente.
+
+| Atributo     | Tipo      | Descripción                                           |
+|--------------|-----------|-------------------------------------------------------|
+| `token`      | `Int`     | Token de refresco generado en el login               |
+| `userId`     | `Int`     | Usuario al que pertenece el token                    |
+| `expiration` | `Instant` | Fecha y hora de expiración del token                 |
+
+---
+
+## Enumeraciones
+
+---
+
+### 🎭 `<<Enum>> Role`
+Define los roles posibles dentro del sistema.
+
+| Valor   | Descripción                                                  |
+|---------|--------------------------------------------------------------|
+| `GUEST` | Usuario invitado sin cuenta registrada; sesión temporal     |
+| `USER`  | Jugador registrado con perfil y estadísticas persistentes   |
+| `ADMIN` | Administrador con acceso a moderación y gestión del sistema |
+
+---
+
+### 🔴 `<<Enum>> UserStatus`
+Define los estados posibles de una cuenta de usuario.
+
+| Valor      | Descripción                                                  |
+|------------|--------------------------------------------------------------|
+| `ACTIVE`   | Cuenta activa y con acceso completo al sistema              |
+| `DELETED`  | Cuenta eliminada; datos marcados para borrado               |
+| `SPENDED`  | Cuenta suspendida temporalmente por sanción                 |
+
+---
+
+## Relaciones entre Clases
+
+| Desde          | Relación        | Hacia          | Descripción                                                |
+|----------------|-----------------|----------------|------------------------------------------------------------|
+| `User`         | Asociación `1—1`| `UserProfile`  | Cada usuario tiene exactamente un perfil                  |
+| `User`         | Asociación `1—1`| `UserStats`    | Cada usuario registrado tiene sus estadísticas propias    |
+| `User`         | Asociación `1—N`| `RefreshToken` | Un usuario puede tener uno o varios tokens activos        |
+| `User`         | Usa `<<enum>>`  | `Role`         | El rol del usuario es uno de los valores del enum Role    |
+| `User`         | Usa `<<enum>>`  | `UserStatus`   | El estado de cuenta usa los valores del enum UserStatus   |
+
+---
+## Diagrama de Flujo 
+
+[📄 Ver documentación (PDF)](docs/Dflujo.pdf)
+
+### Descripción General
+
+Modela el ciclo de vida completo de una sesión en Fight Club Online,
+desde el ingreso hasta el fin del combate. Está dividido en 7 carriles
+que representan los actores del sistema.
+
+---
+
+### Carriles (Swimlanes)
+
+| Carril              | Responsabilidad                                      |
+|---------------------|------------------------------------------------------|
+| **Usuario**          | Ingreso al sistema y navegación general             |
+| **Autenticación**    | Validación de credenciales y gestión de sesión      |
+| **Lobby**            | Creación/unión de partidas e invitación de amigos   |
+| **Departure**        | Combate activo del jugador principal                |
+| **Departure Rival**  | Lógica y acciones del oponente                      |
+| **Departure Viewer** | Participación del espectador con control temporal   |
+| **Carril**           | Reporte de jugadores al finalizar el combate        |
+
+---
+
+### Fases del Flujo
+
+### 1. Autenticación
+El usuario ingresa como **invitado** (sesión temporal) o mediante
+**registro/login** con credenciales validadas. Si los datos son
+incorrectos, el flujo regresa para reintento.
+
+### 2. Lobby
+Una vez autenticado, el jugador puede **crear una sala** (genera código),
+**unirse a una** (valida código) o **invitar amigos** directamente,
+verificando si están conectados y si aceptan la invitación.
+
+### 3. Combate — Jugador
+El jugador selecciona personaje (solo si está desbloqueado) e inicia
+el combate. En cada turno elige entre **movimiento**, **habilidad** o
+**solicitar ayuda** al espectador. Cada acción calcula daño y actualiza
+la barra de vida. El combate termina cuando la vida llega a cero.
+
+### 4. Combate — Rival
+El rival evalúa el estado del combate y elige su estrategia:
+**atacar**, **ejecutar habilidad** o **defenderse**. El daño se
+calcula y aplica de igual forma que en el carril del jugador.
+
+### 5. Combate — Espectador
+Si el jugador solicita ayuda y el espectador acepta, este **toma
+control temporal** del personaje, pudiendo ejecutar movimientos y
+habilidades. Al terminar, devuelve el control al jugador original.
+
+### 6. Chat de Voz (paralelo al combate)
+Tanto el jugador como el espectador pueden activar/desactivar su
+micrófono durante la partida. Los mensajes de voz se transmiten
+a todos los participantes de la sala en tiempo real.
+
+### 7. Reporte
+Al finalizar el combate, cualquier jugador puede reportar a su
+oponente seleccionando un motivo (lenguaje ofensivo, trampa,
+comportamiento, spam o publicidad) y enviando el reporte al sistema.
+
+---
+## Diagrama de Despliegue — Azure Cloud
+
+[📄 Ver documentación (PDF)](docs/Ddespliegue.pdf)
+
+### Descripción General
+
+Muestra la infraestructura de despliegue completa en **Microsoft Azure**,
+donde cada módulo del juego corre como un microservicio independiente en
+contenedores Docker, todos expuestos a través de un API Gateway central.
+
+---
+
+### Nodos del Sistema
+
+### 🖥️ Cliente (Office)
+Aplicación web ejecutada en el navegador del usuario, construida con
+**React** y **TypeScript (SPA)**. Se comunica con el backend únicamente
+a través de HTTPS hacia el API Gateway.
+
+---
+
+### 🔀 API Gateway / WebSocket
+Punto de entrada único del sistema. Enruta el tráfico HTTP y WebSocket
+hacia cada microservicio según el tipo de solicitud (REST o tiempo real).
+
+---
+
+### ☁️ Microservicios — Azure Deployment
+
+Cada servicio incluye **JaCoCo** (cobertura de pruebas), **SonarQube**
+(calidad de código) y **Docker** (contenedor de ejecución).
+
+| Microservicio           | Responsabilidad                                                                 |
+|-------------------------|---------------------------------------------------------------------------------|
+| **Fight**               | Gestiona sesiones de combate en tiempo real, sincroniza estado del juego, calcula daño y retorna jugadores al lobby |
+| **Lobby and Matchmaking**| Maneja el flujo de matchmaking, crea salas públicas y privadas, gestiona invitaciones y prepara jugadores para el combate |
+| **User Management**     | Autentica usuarios, registra nuevas cuentas, permite acceso como invitado y gestiona sesiones y credenciales |
+| **Supervision and Control** | Recibe y genera reportes, calcula indicadores, exporta reportes y logs de moderación |
+
+---
+
+### 🗄️ Bases de Datos — Docker (MongoDB)
+
+| Instancia   | Contenido                                                                 |
+|-------------|---------------------------------------------------------------------------|
+| **MongoDB #1** | Perfiles de usuario, credenciales de login, estado guest/registrado, datos de sesión y estadísticas de jugadores |
+| **MongoDB #2** | Reportes, notificaciones y alertas del sistema de moderación           |
+
+Ambas instancias se conectan a los microservicios mediante **Driver/Mongo**.
+
+---
+
+## Diagrama de Despliegue en la Nube — Azure
+
+[📄 Ver documentación (PDF)](docs/DdespliegueN.pdf)
+
+### Descripción General
+
+Despliegue completamente gestionado en **Microsoft Azure**, distribuido
+en múltiples zonas de disponibilidad (AZ) para garantizar alta
+disponibilidad y resiliencia del servicio.
+
+---
+
+### Componentes del Sistema
+
+### 🌐 Cliente
+**Web React** se comunica vía HTTPS hacia el API Gateway central,
+y también recibe eventos en tiempo real a través del servicio
+**AWeb PubSub** (WebSocket administrado por Azure).
+
+---
+
+### 🔀 API Gateway
+Enruta el tráfico entrante del cliente hacia los microservicios
+distribuidos en las zonas de disponibilidad AZ1 y AZ2.
+
+---
+
+### ☁️ Zonas de Disponibilidad
+
+#### AZ1
+| Microservicio | Herramientas                        | Caché                   |
+|---------------|-------------------------------------|-------------------------|
+| **Fight**     | Docker, JaCoCo, SonarQube           | Azure Cache for Redis   |
+
+#### AZ2
+| Microservicio              | Herramientas              | Caché                   |
+|----------------------------|---------------------------|-------------------------|
+| **Lobby and Matchmaking**  | Docker, JaCoCo, SonarQube | Azure Cache for Redis   |
+| **Supervision and Control**| Docker, JaCoCo, SonarQube | (comparte Redis AZ2)    |
+| **User Management**        | Docker, JaCoCo, SonarQube | (comparte Redis AZ2)    |
+
+Cada zona cuenta con su propia instancia de **Azure Cache for Redis**
+para aislar el estado de combate (AZ1) del estado de lobby,
+moderación y usuarios (AZ2).
+
+---
+
+### 🗄️ Persistencia y Observabilidad
+
+| Servicio           | Rol                                                              |
+|--------------------|------------------------------------------------------------------|
+| **MongoDB Cluster** | Base de datos principal de persistencia para todos los módulos |
+| **Azure Monitor**   | Observabilidad centralizada: métricas, logs y alertas          |
+
+Azure Monitor se conecta tanto al MongoDB Cluster como a los
+microservicios para recolectar métricas en tiempo real.
+
+---
+## Diagrama de Componentes
+
+---
+
+### Nivel 1 — Aplicación (Vista General)
+
+Muestra los módulos principales del sistema y cómo se conectan
+desde el frontend hasta los servicios backend.
+
+[📄 Ver documentación (PDF)](docs/DComponentesN1.pdf)
+
+
+### Componentes
+
+| Componente                | Tecnologías                          | Base de Datos               |
+|---------------------------|--------------------------------------|-----------------------------|
+| **Fight Club Front**       | Vercel, TypeScript, SPA             | —                           |
+| **API Gateway**            | API Gateway (doble capa)            | —                           |
+| **Supervision and Control**| SonarQube, Spring, JaCoCo, Docker   | Supervision and Control DB  |
+| **Flight**                 | SonarQube, Spring, JaCoCo, Docker   | —                           |
+| **Lobby and Matchmaking**  | SonarQube, Spring, JaCoCo, Docker   | —                           |
+| **User Management**        | SonarQube, Spring, JaCoCo, Docker   | User Management DB          |
+
+El frontend desplegado en **Vercel** se conecta al API Gateway,
+que distribuye el tráfico hacia cada microservicio. Solo
+**Supervision and Control** y **User Management** tienen bases de
+datos MongoDB dedicadas en este nivel.
+
+---
+
+### Nivel 2 — Nodos Físicos (Azure)
+
+Detalla la infraestructura física de Azure donde corren los servicios,
+usando **AKS (Azure Kubernetes Service)** como orquestador central.
+
+[📄 Ver documentación (PDF)](docs/DComponentesN2.pdf)
+
+### Nodos `<<device>>`
+
+| Nodo                         | Rol                                                              |
+|------------------------------|------------------------------------------------------------------|
+| **Cliente**                  | Web Client (React SPA) ejecutado en el navegador                |
+| **API Gateway** (Azure APIM/Ingress) | Punto de entrada único; enruta hacia el clúster AKS    |
+| **AKS Cluster**              | Orquesta los 4 microservicios en contenedores Kubernetes        |
+| **MongoDB**                  | Persistencia principal de datos                                 |
+| **Azure Cache for Redis**    | Caché de sesiones y estado de partidas en tiempo real           |
+| **Azure Web PubSub Service** | Canal de comunicación WebSocket administrado                    |
+| **Azure Monitor / App Insights** | Observabilidad, métricas y alertas del sistema             |
+
+### Microservicios dentro del AKS Cluster
+
+- **Fight** — Motor de combate
+- **Lobby & Matchmaking** — Salas y emparejamiento
+- **User Management** — Autenticación y perfiles
+- **Supervisión & Control** — Moderación y reportes
+
+---
+
+### Nivel 3 — Microservicio User Management (Arquitectura Hexagonal)
+
+Detalla la arquitectura interna del microservicio de login/usuarios,
+implementada con el patrón **Hexagonal (Ports & Adapters)**.
+
+[📄 Ver documentación (PDF)](docs/DComponentesN3.pdf)
+
+### Capas del Microservicio
+
+| Capa                | Componentes                                                                 |
+|---------------------|-----------------------------------------------------------------------------|
+| **Controladores**   | `UserController`, `UserProfileController`, `UserStatsController`           |
+| **Adaptadores**     | `UserAdapter`, `UserProfileAdapter`, `UserStatsAdapter` + Mappers           |
+| **Casos de Uso**    | `LoginUser`, `RegisterGuest`, `RegisterUser`, `UpdateUser`, `SaveUserProfile`, `PatchUserProfile`, `GetUserProfile`, `DeleteUserProfile`, `GetUserStats` |
+| **Puertos**         | `UserRepositoryPort`, `UserProfileRepositoryPort`, `UserStatsRepositoryPort`|
+| **Adaptadores BD**  | `UserRepositoryAdapter`, `UserProfileRepositoryAdapter`, `UserStatsRepositoryAdapter` |
+| **Repositorios**    | `UserRepository`, `UserProfileRepository`, `UserStatsRepository`           |
+| **Documentos**      | `UserDocument`, `UserProfileDocument`, `UserStatsDocument`                 |
+| **Persistencia**    | MongoDB (instancia por agregado)                                            |
+
+### Servicios externos conectados
+
+El microservicio User Management se integra con:
+- **Lobby and Matchmaking**
+- **Supervision and Control**
+- **Flight (Fight)**
+
+Cada uno con sus propias instancias de MongoDB y stack
+(JaCoCo + SonarQube + Spring Boot).
