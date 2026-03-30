@@ -901,3 +901,90 @@ Azure Monitor se conecta tanto al MongoDB Cluster como a los
 microservicios para recolectar métricas en tiempo real.
 
 ---
+## Diagrama de Componentes
+
+---
+
+### Nivel 1 — Aplicación (Vista General)
+
+Muestra los módulos principales del sistema y cómo se conectan
+desde el frontend hasta los servicios backend.
+
+[📄 Ver documentación (PDF)](docs/DComponentesN1.pdf)
+
+
+### Componentes
+
+| Componente                | Tecnologías                          | Base de Datos               |
+|---------------------------|--------------------------------------|-----------------------------|
+| **Fight Club Front**       | Vercel, TypeScript, SPA             | —                           |
+| **API Gateway**            | API Gateway (doble capa)            | —                           |
+| **Supervision and Control**| SonarQube, Spring, JaCoCo, Docker   | Supervision and Control DB  |
+| **Flight**                 | SonarQube, Spring, JaCoCo, Docker   | —                           |
+| **Lobby and Matchmaking**  | SonarQube, Spring, JaCoCo, Docker   | —                           |
+| **User Management**        | SonarQube, Spring, JaCoCo, Docker   | User Management DB          |
+
+El frontend desplegado en **Vercel** se conecta al API Gateway,
+que distribuye el tráfico hacia cada microservicio. Solo
+**Supervision and Control** y **User Management** tienen bases de
+datos MongoDB dedicadas en este nivel.
+
+---
+
+### Nivel 2 — Nodos Físicos (Azure)
+
+Detalla la infraestructura física de Azure donde corren los servicios,
+usando **AKS (Azure Kubernetes Service)** como orquestador central.
+
+[📄 Ver documentación (PDF)](docs/DComponentesN2.pdf)
+
+### Nodos `<<device>>`
+
+| Nodo                         | Rol                                                              |
+|------------------------------|------------------------------------------------------------------|
+| **Cliente**                  | Web Client (React SPA) ejecutado en el navegador                |
+| **API Gateway** (Azure APIM/Ingress) | Punto de entrada único; enruta hacia el clúster AKS    |
+| **AKS Cluster**              | Orquesta los 4 microservicios en contenedores Kubernetes        |
+| **MongoDB**                  | Persistencia principal de datos                                 |
+| **Azure Cache for Redis**    | Caché de sesiones y estado de partidas en tiempo real           |
+| **Azure Web PubSub Service** | Canal de comunicación WebSocket administrado                    |
+| **Azure Monitor / App Insights** | Observabilidad, métricas y alertas del sistema             |
+
+### Microservicios dentro del AKS Cluster
+
+- **Fight** — Motor de combate
+- **Lobby & Matchmaking** — Salas y emparejamiento
+- **User Management** — Autenticación y perfiles
+- **Supervisión & Control** — Moderación y reportes
+
+---
+
+### Nivel 3 — Microservicio User Management (Arquitectura Hexagonal)
+
+Detalla la arquitectura interna del microservicio de login/usuarios,
+implementada con el patrón **Hexagonal (Ports & Adapters)**.
+
+[📄 Ver documentación (PDF)](docs/DComponentesN3.pdf)
+
+### Capas del Microservicio
+
+| Capa                | Componentes                                                                 |
+|---------------------|-----------------------------------------------------------------------------|
+| **Controladores**   | `UserController`, `UserProfileController`, `UserStatsController`           |
+| **Adaptadores**     | `UserAdapter`, `UserProfileAdapter`, `UserStatsAdapter` + Mappers           |
+| **Casos de Uso**    | `LoginUser`, `RegisterGuest`, `RegisterUser`, `UpdateUser`, `SaveUserProfile`, `PatchUserProfile`, `GetUserProfile`, `DeleteUserProfile`, `GetUserStats` |
+| **Puertos**         | `UserRepositoryPort`, `UserProfileRepositoryPort`, `UserStatsRepositoryPort`|
+| **Adaptadores BD**  | `UserRepositoryAdapter`, `UserProfileRepositoryAdapter`, `UserStatsRepositoryAdapter` |
+| **Repositorios**    | `UserRepository`, `UserProfileRepository`, `UserStatsRepository`           |
+| **Documentos**      | `UserDocument`, `UserProfileDocument`, `UserStatsDocument`                 |
+| **Persistencia**    | MongoDB (instancia por agregado)                                            |
+
+### Servicios externos conectados
+
+El microservicio User Management se integra con:
+- **Lobby and Matchmaking**
+- **Supervision and Control**
+- **Flight (Fight)**
+
+Cada uno con sus propias instancias de MongoDB y stack
+(JaCoCo + SonarQube + Spring Boot).
