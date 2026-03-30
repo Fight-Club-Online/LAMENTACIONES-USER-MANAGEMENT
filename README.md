@@ -726,7 +726,7 @@ Define los estados posibles de una cuenta de usuario.
 | `User`         | Usa `<<enum>>`  | `UserStatus`   | El estado de cuenta usa los valores del enum UserStatus   |
 
 ---
-## Diagrama de Flujo — Fight Club Online
+## Diagrama de Flujo 
 
 [📄 Ver documentación (PDF)](docs/Dflujo.pdf)
 
@@ -789,5 +789,56 @@ a todos los participantes de la sala en tiempo real.
 Al finalizar el combate, cualquier jugador puede reportar a su
 oponente seleccionando un motivo (lenguaje ofensivo, trampa,
 comportamiento, spam o publicidad) y enviando el reporte al sistema.
+
+---
+## Diagrama de Despliegue — Azure Cloud
+
+[📄 Ver documentación (PDF)](docs/Ddespliegue.pdf)
+
+### Descripción General
+
+Muestra la infraestructura de despliegue completa en **Microsoft Azure**,
+donde cada módulo del juego corre como un microservicio independiente en
+contenedores Docker, todos expuestos a través de un API Gateway central.
+
+---
+
+### Nodos del Sistema
+
+### 🖥️ Cliente (Office)
+Aplicación web ejecutada en el navegador del usuario, construida con
+**React** y **TypeScript (SPA)**. Se comunica con el backend únicamente
+a través de HTTPS hacia el API Gateway.
+
+---
+
+### 🔀 API Gateway / WebSocket
+Punto de entrada único del sistema. Enruta el tráfico HTTP y WebSocket
+hacia cada microservicio según el tipo de solicitud (REST o tiempo real).
+
+---
+
+### ☁️ Microservicios — Azure Deployment
+
+Cada servicio incluye **JaCoCo** (cobertura de pruebas), **SonarQube**
+(calidad de código) y **Docker** (contenedor de ejecución).
+
+| Microservicio           | Responsabilidad                                                                 |
+|-------------------------|---------------------------------------------------------------------------------|
+| **Fight**               | Gestiona sesiones de combate en tiempo real, sincroniza estado del juego, calcula daño y retorna jugadores al lobby |
+| **Lobby and Matchmaking**| Maneja el flujo de matchmaking, crea salas públicas y privadas, gestiona invitaciones y prepara jugadores para el combate |
+| **User Management**     | Autentica usuarios, registra nuevas cuentas, permite acceso como invitado y gestiona sesiones y credenciales |
+| **Supervision and Control** | Recibe y genera reportes, calcula indicadores, exporta reportes y logs de moderación |
+
+---
+
+### 🗄️ Bases de Datos — Docker (MongoDB)
+
+| Instancia   | Contenido                                                                 |
+|-------------|---------------------------------------------------------------------------|
+| **MongoDB #1** | Perfiles de usuario, credenciales de login, estado guest/registrado, datos de sesión y estadísticas de jugadores |
+| **MongoDB #2** | Reportes, notificaciones y alertas del sistema de moderación           |
+
+Ambas instancias se conectan a los microservicios mediante **Driver/Mongo**.
 
 ---
