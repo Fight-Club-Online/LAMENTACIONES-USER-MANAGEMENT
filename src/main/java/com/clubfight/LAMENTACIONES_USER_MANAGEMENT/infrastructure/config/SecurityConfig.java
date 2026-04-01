@@ -12,6 +12,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.List;
 
 /**
  * Configuración de seguridad de la API.
@@ -71,5 +75,25 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of(
+            "http://localhost:5173",
+            "https://clubfigth-e9ffa5bjeeb4bvb7.brazilsouth-01.azurewebsites.net",
+            "https://lamentaciones-frontend-git-preprod-juan-caballeros-projects.vercel.app",
+            "https://lamentaciones-frontend-r0g3i6enb-juan-caballeros-projects.vercel.app",
+            "https://lamentaciones-frontend.vercel.app",
+            "https://lamentaciones-frontend-juan-caballeros-projects.vercel.app"
+        ));
+        config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 }

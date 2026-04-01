@@ -13,7 +13,14 @@ public class WebConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**") 
-                        .allowedOrigins("http://localhost:5173", "https://clubfigth-e9ffa5bjeeb4bvb7.brazilsouth-01.azurewebsites.net", "https://lamentaciones-frontend-git-preprod-juan-caballeros-projects.vercel.app", "https://lamentaciones-frontend-r0g3i6enb-juan-caballeros-projects.vercel.app")
+                        .allowedOrigins(
+                            "http://localhost:5173",
+                            "https://clubfigth-e9ffa5bjeeb4bvb7.brazilsouth-01.azurewebsites.net",
+                            "https://lamentaciones-frontend-git-preprod-juan-caballeros-projects.vercel.app",
+                            "https://lamentaciones-frontend-r0g3i6enb-juan-caballeros-projects.vercel.app",
+                            "https://lamentaciones-frontend.vercel.app",
+                            "https://lamentaciones-frontend-juan-caballeros-projects.vercel.app"
+                        )
                         .allowedMethods("GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
