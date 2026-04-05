@@ -91,6 +91,7 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
                     .email(user.getEmail())
                     .username(user.getUsername())
                     .userId(user.getId())
+                    .role(user.getRole())
                     .build();
 
         } catch (Exception e) {
