@@ -1,13 +1,13 @@
 package com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.service;
 
 import java.time.Instant;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.UserRegisteredEvent;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.UserEventPublisher;
+import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.UserLoggedInEvent; // Asegúrate de importar esto
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.commands.LoginUserCommand;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.commands.RegisterGuestCommand;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.commands.RegisterUserCommand;
@@ -22,12 +22,8 @@ import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.model.User;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.config.JwtUtil;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.dtos.response.AuthResponse;
 
-
 import lombok.RequiredArgsConstructor;
 
-/**
- * Servicio para el usuario.
- */
 @Service
 @RequiredArgsConstructor
 public class UserService implements RegisterUserUseCase, LoginUserUseCase, RegisterGuestUseCase {
@@ -41,7 +37,6 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase, Regis
     @Override
     @Transactional
     public AuthResponse register(RegisterUserCommand command) {
-
         if (userRepositoryPort.existsByEmail(command.getEmail())) {
             throw new RuntimeException("Usuario ya existe con ese email");
         }
@@ -57,6 +52,7 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase, Regis
 
         user = userRepositoryPort.save(user);
         
+        // Publicar evento de registro
         eventPublisher.publishUserRegistered(
                 UserRegisteredEvent.builder()
                 .userId(user.getId())
@@ -81,8 +77,8 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase, Regis
     }
 
     @Override
+    @Transactional
     public AuthResponse login(LoginUserCommand command) {
-
         User user = userRepositoryPort.findByEmail(command.getEmail())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
@@ -96,8 +92,15 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase, Regis
         user.setLastLogin(Instant.now());
         userRepositoryPort.save(user);
 
+        // CORRECCIÓN: Asegurar que el evento lleve el username
+        // Si el Mapper falla, usa el Builder directamente
         eventPublisher.publishUserLoggedIn(
-                UserMapper.toUserLoggedInEvent(user, accessToken)
+                UserLoggedInEvent.builder()
+                    .userId(user.getId())
+                    .username(user.getUsername())
+                    .token(accessToken)
+                    .loginAt(user.getLastLogin())
+                    .build()
         );
 
         return AuthResponse.builder()
@@ -112,15 +115,17 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase, Regis
     @Override
     @Transactional
     public AuthResponse registerGuest(RegisterGuestCommand command) {
-
-        User guest = User.builder()
-                .role(Role.GUEST)
-                .username(command.getUsername())
-                .guestExpiration(Instant.now().plusSeconds(3600))
-                .createdAt(Instant.now())
-                .build();
-
-        guest = userRepositoryPort.save(guest);
+        User guest = userRepositoryPort.findGuestByUsername(command.getUsername())
+                .filter(u -> u.getRole() == Role.GUEST)
+                .orElseGet(() -> {
+                    User newGuest = User.builder()
+                            .role(Role.GUEST)
+                            .username(command.getUsername())
+                            .guestExpiration(Instant.now().plusSeconds(3600))
+                            .createdAt(Instant.now())
+                            .build();
+                    return userRepositoryPort.save(newGuest);
+                });
 
         eventPublisher.publishGuestRegistered(
                 UserMapper.toGuestRegisteredEvent(guest)
@@ -136,5 +141,4 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase, Regis
                 .refreshToken(refreshToken.getToken())
                 .build();
     }
-
 }
