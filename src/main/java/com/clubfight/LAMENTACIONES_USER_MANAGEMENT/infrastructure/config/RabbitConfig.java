@@ -4,6 +4,7 @@ import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -21,6 +22,10 @@ public class RabbitConfig {
     public static final String REGISTERED_QUEUE = "user.registered.queue";
     public static final String LOGGEDIN_QUEUE = "user.loggedin.queue";
     public static final String GUEST_REGISTERED_QUEUE = "user.guest.registered.queue";
+
+    public static final String FIGHT_EXCHANGE = "fight.events";
+    public static final String FIGHT_FINISHED_QUEUE = "fight.finished.stats.queue";
+    public static final String FIGHT_FINISHED_ROUTING_KEY = "fight.finished";
 
     @Bean
     public Queue guestRegisteredQueue() {
@@ -60,6 +65,24 @@ public class RabbitConfig {
         return BindingBuilder.bind(loggedInQueue())
                 .to(userExchange())
                 .with("user.loggedin");
+    }
+
+    @Bean
+    public TopicExchange fightExchange() {
+        return new TopicExchange(FIGHT_EXCHANGE);
+    }
+
+    @Bean
+    public Queue fightFinishedQueue() {
+        return new Queue(FIGHT_FINISHED_QUEUE, true);
+    }
+
+    @Bean
+    public Binding fightFinishedBinding() {
+        return BindingBuilder
+                .bind(fightFinishedQueue())
+                .to(fightExchange())
+                .with(FIGHT_FINISHED_ROUTING_KEY);
     }
 
     @Bean

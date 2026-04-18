@@ -187,6 +187,7 @@
                                 <exclude>**/infrastructure/adapters/messaging/**</exclude>
                                 <exclude>**/LamentacionesUserManagementApplication.class</exclude>
 							    <exclude>**/AzureBlobService.class</exclude>
+								<exclude>**/UpdateUserStatsService.class</exclude>
                                 <exclude>**/AvatarController.class</exclude>
 							</excludes>
 						</configuration>
@@ -222,6 +223,7 @@
                                 <exclude>**/infrastructure/adapters/messaging/**</exclude>
                                 <exclude>**/LamentacionesUserManagementApplication.class</exclude>
 							    <exclude>**/AzureBlobService.class</exclude>
+								<exclude>**/UpdateUserStatsService.class</exclude>
                                 <exclude>**/AvatarController.class</exclude>								
 							</excludes>
 						</configuration>
