@@ -19,4 +19,6 @@ public class FightFinishedEvent {
     private String result;          
     private int winnerPointsChange;
     private int loserPointsChange;
+    private String winnerUsername; 
+    private String loserUsername;   
 }
