@@ -1,5 +1,11 @@
 package com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.persistence;
 
+ 
+import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.enums.Achievement;
+import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.enums.Rank;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -23,5 +29,7 @@ public class UserStatsDocument {
     private int points;
     private int level;
     private int streak;
+    private Rank rank;
+    private Set<Achievement> achievements = new HashSet<>();
 
 }

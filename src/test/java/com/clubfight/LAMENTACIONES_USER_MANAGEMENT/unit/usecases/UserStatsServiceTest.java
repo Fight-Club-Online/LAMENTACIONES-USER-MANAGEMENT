@@ -1,11 +1,13 @@
 package com.clubfight.LAMENTACIONES_USER_MANAGEMENT.unit.usecases;
 
-import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.service.UserStatsService;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.ports.out.UserStatsRepositoryPort;
+import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.service.UserStatsService;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.model.UserStats;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -29,17 +31,10 @@ class UserStatsServiceTest {
     @Test
     void shouldReturnStats() {
         String userId = "juan";
-        UserStats stats = new UserStats(
-                userId,
-                10,
-                2,
-                1,
-                50,
-                13,
-                100,
-                5,
-                3
-        );
+
+        UserStats stats = mock(UserStats.class);
+        when(stats.getUserId()).thenReturn(userId);
+        when(stats.getWins()).thenReturn(10);
 
         when(repository.findByUserId(userId)).thenReturn(Optional.of(stats));
 
