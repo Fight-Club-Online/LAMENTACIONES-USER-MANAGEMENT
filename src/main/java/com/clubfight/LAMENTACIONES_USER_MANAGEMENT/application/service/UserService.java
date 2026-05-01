@@ -52,7 +52,6 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase, Regis
 
         user = userRepositoryPort.save(user);
         
-        // Publicar evento de registro
         eventPublisher.publishUserRegistered(
                 UserRegisteredEvent.builder()
                 .userId(user.getId())
@@ -92,8 +91,6 @@ public class UserService implements RegisterUserUseCase, LoginUserUseCase, Regis
         user.setLastLogin(Instant.now());
         userRepositoryPort.save(user);
 
-        // CORRECCIÓN: Asegurar que el evento lleve el username
-        // Si el Mapper falla, usa el Builder directamente
         eventPublisher.publishUserLoggedIn(
                 UserLoggedInEvent.builder()
                     .userId(user.getId())

@@ -2,10 +2,13 @@ package com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.service;
 
 import java.time.Instant;
 import java.util.Collections;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.UserEventPublisher;
+import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.UserLoggedInEvent;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.UserRegisteredEvent;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.ports.out.UserRepositoryPort;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.enums.Role;
@@ -37,6 +40,7 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
     private String clientId;
 
     @Override
+    @Transactional 
     public AuthResponse authenticate(String idTokenString) {
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
@@ -48,23 +52,21 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
             GoogleIdToken idToken = verifier.verify(idTokenString);
 
             if (idToken == null) {
-                throw new RuntimeException("Token inválido");
+                throw new RuntimeException("Token de Google inválido");
             }
 
             GoogleIdToken.Payload payload = idToken.getPayload();
             String email = payload.getEmail();
-
-            final boolean[] isNewUser = {false};
-
             String name = (String) payload.get("name");
             String pictureUrl = (String) payload.get("picture");
 
+            AtomicBoolean isNewUser = new AtomicBoolean(false);
             User user = userRepositoryPort.findByEmail(email)
                     .orElseGet(() -> {
-                        isNewUser[0] = true;
+                        isNewUser.set(true);
                         User newUser = User.builder()
                                 .email(email)
-                                .username(name) 
+                                .username(name)
                                 .verified(true)
                                 .role(Role.USER)
                                 .createdAt(Instant.now())
@@ -72,18 +74,30 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
                         return userRepositoryPort.save(newUser);
                     });
 
-            if (isNewUser[0]) {
+            if (isNewUser.get()) {
                 eventPublisher.publishUserRegistered(UserRegisteredEvent.builder()
                         .userId(user.getId())
                         .email(user.getEmail())
                         .username(user.getUsername())
-                        .avatarURL(pictureUrl) 
+                        .avatarURL(pictureUrl)
+                        .role(user.getRole()) 
                         .createdAt(user.getCreatedAt())
                         .build());
             }
 
+
+            user.setLastLogin(Instant.now());
+            userRepositoryPort.save(user);
+
             String accessToken = jwtUtil.generateToken(user);
             RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
+
+            eventPublisher.publishUserLoggedIn(UserLoggedInEvent.builder()
+                    .userId(user.getId())
+                    .username(user.getUsername())
+                    .token(accessToken)
+                    .loginAt(user.getLastLogin())
+                    .build());
 
             return AuthResponse.builder()
                     .accessToken(accessToken)
@@ -95,9 +109,7 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
                     .build();
 
         } catch (Exception e) {
-            
-            e.printStackTrace(); 
-            throw new RuntimeException("Error verificando Google token: " + e.getMessage(), e);
+            throw new RuntimeException("Error en autenticación Google: " + e.getMessage(), e);
         }
     }
 }
