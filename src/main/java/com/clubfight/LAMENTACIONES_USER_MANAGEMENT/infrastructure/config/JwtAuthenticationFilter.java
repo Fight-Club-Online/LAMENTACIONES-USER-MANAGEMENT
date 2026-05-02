@@ -61,8 +61,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                     userRepositoryPort.findById(userId).ifPresent(user -> {
+                        String authority = "ROLE_" + user.getRole().name();
                         UsernamePasswordAuthenticationToken auth =
-                                new UsernamePasswordAuthenticationToken(user, null, List.of());
+                                new UsernamePasswordAuthenticationToken(user, null, List.of(() -> authority));
                         SecurityContextHolder.getContext().setAuthentication(auth);
                     });
                 }

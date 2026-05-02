@@ -35,4 +35,7 @@ public class UserEventPublisher {
     public void publishUserProfileUpdated(UserRegisteredEvent event) {
         rabbitTemplate.convertAndSend(USER_EXCHANGE, "user.profile.updated", event);
     }
+    public void publishUserPromotedToAdmin(UserPromotedToAdminEvent event) {
+        rabbitTemplate.convertAndSend(USER_EXCHANGE, "user.promoted.admin", event);
+    }
 }

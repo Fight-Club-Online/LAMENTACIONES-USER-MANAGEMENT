@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.clubfight.LAMENTACIONES_USER_MANAGEMENT")
 @EnableScheduling
 @EnableMongoRepositories(basePackages = "com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.repositories.mongo")
 @EnableRedisRepositories(basePackages = "com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.repositories.redis")
