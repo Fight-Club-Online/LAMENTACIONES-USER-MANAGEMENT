@@ -40,7 +40,7 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
     private String clientId;
 
     @Override
-    @Transactional 
+    @Transactional
     public AuthResponse authenticate(String idTokenString) {
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
@@ -73,6 +73,16 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
                                 .build();
                         return userRepositoryPort.save(newUser);
                     });
+            if (user.isBanned()) {
+                if (user.getBanExpiresAt() != null && Instant.now().isAfter(user.getBanExpiresAt())) {
+                    user.setBanned(false);
+                    user.setBanReason(null);
+                    user.setBanExpiresAt(null);
+                    userRepositoryPort.save(user);
+                } else {
+                    throw new RuntimeException("Tu cuenta ha sido sancionada. Razón: " + user.getBanReason());
+                }
+            }
 
             if (isNewUser.get()) {
                 eventPublisher.publishUserRegistered(UserRegisteredEvent.builder()
@@ -80,11 +90,10 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
                         .email(user.getEmail())
                         .username(user.getUsername())
                         .avatarURL(pictureUrl)
-                        .role(user.getRole()) 
+                        .role(user.getRole())
                         .createdAt(user.getCreatedAt())
                         .build());
             }
-
 
             user.setLastLogin(Instant.now());
             userRepositoryPort.save(user);
