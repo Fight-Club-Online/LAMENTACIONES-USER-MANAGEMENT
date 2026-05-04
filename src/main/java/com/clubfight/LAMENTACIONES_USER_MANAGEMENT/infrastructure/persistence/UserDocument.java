@@ -29,11 +29,14 @@ public class UserDocument {
     private String password;
     private String username;
     private Role role;
-    private boolean verified; 
-    private Instant createdAt; 
-    private Instant lastLogin; 
-    private String refreshToken; 
-    private Instant guestExpiration; 
+    private boolean verified;
+    private Instant createdAt;
+    private Instant lastLogin;
+    private String refreshToken;
+    private Instant guestExpiration;
+    private boolean banned;
+    private String banReason;
+    private Instant banExpiresAt;
 
     public static class UserBuilder {
         private Instant createdAt = Instant.now();

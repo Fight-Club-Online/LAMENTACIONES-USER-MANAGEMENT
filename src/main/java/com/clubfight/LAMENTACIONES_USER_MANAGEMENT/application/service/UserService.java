@@ -28,114 +28,123 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserService implements RegisterUserUseCase, LoginUserUseCase, RegisterGuestUseCase {
 
-    private final UserRepositoryPort userRepositoryPort;
-    private final JwtUtil jwtUtil;
-    private final PasswordEncoder passwordEncoder;
-    private final UserEventPublisher eventPublisher;
-    private final RefreshTokenService refreshTokenService;
+        private final UserRepositoryPort userRepositoryPort;
+        private final JwtUtil jwtUtil;
+        private final PasswordEncoder passwordEncoder;
+        private final UserEventPublisher eventPublisher;
+        private final RefreshTokenService refreshTokenService;
 
-    @Override
-    @Transactional
-    public AuthResponse register(RegisterUserCommand command) {
-        if (userRepositoryPort.existsByEmail(command.getEmail())) {
-            throw new RuntimeException("Usuario ya existe con ese email");
+        @Override
+        @Transactional
+        public AuthResponse register(RegisterUserCommand command) {
+                if (userRepositoryPort.existsByEmail(command.getEmail())) {
+                        throw new RuntimeException("Usuario ya existe con ese email");
+                }
+
+                User user = User.builder()
+                                .email(command.getEmail())
+                                .username(command.getUsername())
+                                .password(passwordEncoder.encode(command.getPassword()))
+                                .role(Role.USER)
+                                .verified(false)
+                                .createdAt(Instant.now())
+                                .build();
+
+                user = userRepositoryPort.save(user);
+
+                eventPublisher.publishUserRegistered(
+                                UserRegisteredEvent.builder()
+                                                .userId(user.getId())
+                                                .email(user.getEmail())
+                                                .username(user.getUsername())
+                                                .avatarURL(command.getAvatarURL())
+                                                .role(user.getRole())
+                                                .createdAt(user.getCreatedAt())
+                                                .build());
+
+                String accessToken = jwtUtil.generateToken(user);
+                RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
+
+                return AuthResponse.builder()
+                                .userId(user.getId())
+                                .username(user.getUsername())
+                                .email(user.getEmail())
+                                .accessToken(accessToken)
+                                .refreshToken(refreshToken.getToken())
+                                .build();
         }
 
-        User user = User.builder()
-                .email(command.getEmail())
-                .username(command.getUsername())
-                .password(passwordEncoder.encode(command.getPassword()))
-                .role(Role.USER)
-                .verified(false)
-                .createdAt(Instant.now())
-                .build();
+        @Override
+        @Transactional
+        public AuthResponse login(LoginUserCommand command) {
+                User user = userRepositoryPort.findByEmail(command.getEmail())
+                                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        user = userRepositoryPort.save(user);
-        
-        eventPublisher.publishUserRegistered(
-                UserRegisteredEvent.builder()
-                .userId(user.getId())
-                .email(user.getEmail())
-                .username(user.getUsername())
-                .avatarURL(command.getAvatarURL()) 
-                .role(user.getRole())
-                .createdAt(user.getCreatedAt())
-                .build()
-        );
+                if (!passwordEncoder.matches(command.getPassword(), user.getPassword())) {
+                        throw new RuntimeException("Contraseña incorrecta");
+                }
 
-        String accessToken = jwtUtil.generateToken(user);
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
+                if (user.isBanned()) {
+                        if (user.getBanExpiresAt() != null && Instant.now().isAfter(user.getBanExpiresAt())) {
+                                user.setBanned(false);
+                                user.setBanReason(null);
+                                user.setBanExpiresAt(null);
+                                userRepositoryPort.save(user);
+                        } else {
+                                throw new RuntimeException(
+                                                "Tu cuenta ha sido sancionada. Razón: " + user.getBanReason());
+                        }
+                }
 
-        return AuthResponse.builder()
-                .userId(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken.getToken())
-                .build();
-    }
+                String accessToken = jwtUtil.generateToken(user);
+                RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
 
-    @Override
-    @Transactional
-    public AuthResponse login(LoginUserCommand command) {
-        User user = userRepositoryPort.findByEmail(command.getEmail())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                user.setLastLogin(Instant.now());
+                userRepositoryPort.save(user);
 
-        if (!passwordEncoder.matches(command.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Contraseña incorrecta");
+                eventPublisher.publishUserLoggedIn(
+                                UserLoggedInEvent.builder()
+                                                .userId(user.getId())
+                                                .username(user.getUsername())
+                                                .token(accessToken)
+                                                .loginAt(user.getLastLogin())
+                                                .build());
+
+                return AuthResponse.builder()
+                                .userId(user.getId())
+                                .username(user.getUsername())
+                                .email(user.getEmail())
+                                .accessToken(accessToken)
+                                .refreshToken(refreshToken.getToken())
+                                .build();
         }
 
-        String accessToken = jwtUtil.generateToken(user);
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
+        @Override
+        @Transactional
+        public AuthResponse registerGuest(RegisterGuestCommand command) {
+                User guest = userRepositoryPort.findGuestByUsername(command.getUsername())
+                                .filter(u -> u.getRole() == Role.GUEST)
+                                .orElseGet(() -> {
+                                        User newGuest = User.builder()
+                                                        .role(Role.GUEST)
+                                                        .username(command.getUsername())
+                                                        .guestExpiration(Instant.now().plusSeconds(3600))
+                                                        .createdAt(Instant.now())
+                                                        .build();
+                                        return userRepositoryPort.save(newGuest);
+                                });
 
-        user.setLastLogin(Instant.now());
-        userRepositoryPort.save(user);
+                eventPublisher.publishGuestRegistered(
+                                UserMapper.toGuestRegisteredEvent(guest));
 
-        eventPublisher.publishUserLoggedIn(
-                UserLoggedInEvent.builder()
-                    .userId(user.getId())
-                    .username(user.getUsername())
-                    .token(accessToken)
-                    .loginAt(user.getLastLogin())
-                    .build()
-        );
+                String accessToken = jwtUtil.generateToken(guest);
+                RefreshToken refreshToken = refreshTokenService.createRefreshToken(guest.getId());
 
-        return AuthResponse.builder()
-                .userId(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken.getToken())
-                .build();
-    }
-
-    @Override
-    @Transactional
-    public AuthResponse registerGuest(RegisterGuestCommand command) {
-        User guest = userRepositoryPort.findGuestByUsername(command.getUsername())
-                .filter(u -> u.getRole() == Role.GUEST)
-                .orElseGet(() -> {
-                    User newGuest = User.builder()
-                            .role(Role.GUEST)
-                            .username(command.getUsername())
-                            .guestExpiration(Instant.now().plusSeconds(3600))
-                            .createdAt(Instant.now())
-                            .build();
-                    return userRepositoryPort.save(newGuest);
-                });
-
-        eventPublisher.publishGuestRegistered(
-                UserMapper.toGuestRegisteredEvent(guest)
-        );
-
-        String accessToken = jwtUtil.generateToken(guest);
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(guest.getId());
-
-        return AuthResponse.builder()
-                .userId(guest.getId())
-                .username(guest.getUsername())
-                .accessToken(accessToken)
-                .refreshToken(refreshToken.getToken())
-                .build();
-    }
+                return AuthResponse.builder()
+                                .userId(guest.getId())
+                                .username(guest.getUsername())
+                                .accessToken(accessToken)
+                                .refreshToken(refreshToken.getToken())
+                                .build();
+        }
 }

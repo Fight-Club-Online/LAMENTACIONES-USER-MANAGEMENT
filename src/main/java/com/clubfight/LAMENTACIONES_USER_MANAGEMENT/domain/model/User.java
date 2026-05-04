@@ -31,4 +31,7 @@ public class User {
     private Instant createdAt;
     private Instant lastLogin;
     private Instant guestExpiration;
+    private boolean banned;
+    private String banReason;
+    private Instant banExpiresAt;
 }

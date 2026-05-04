@@ -27,6 +27,10 @@ public class RabbitConfig {
     public static final String FIGHT_FINISHED_QUEUE = "fight.finished.stats.queue";
     public static final String FIGHT_FINISHED_ROUTING_KEY = "fight.finished";
 
+    public static final String USER_BANNED_QUEUE = "auth.user.banned.queue";
+    public static final String USER_SUSPENDED_QUEUE = "auth.user.suspended.queue";
+    public static final String BAN_LIFTED_QUEUE = "auth.ban.lifted.queue";
+
     @Bean
     public Queue guestRegisteredQueue() {
         return new Queue(GUEST_REGISTERED_QUEUE, true);
@@ -46,13 +50,14 @@ public class RabbitConfig {
     public DirectExchange userExchange() {
         return new DirectExchange(USER_EXCHANGE);
     }
+
     @Bean
     public Binding bindingGuestRegistered() {
         return BindingBuilder.bind(guestRegisteredQueue())
                 .to(userExchange())
                 .with("user.guest.registered");
     }
-    
+
     @Bean
     public Binding bindingRegistered() {
         return BindingBuilder.bind(registeredQueue())
@@ -95,5 +100,20 @@ public class RabbitConfig {
     @Bean
     public MessageConverter jsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
+    }
+
+    @Bean
+    public Queue userBannedQueue() {
+        return new Queue(USER_BANNED_QUEUE, true);
+    }
+
+    @Bean
+    public Queue userSuspendedQueue() {
+        return new Queue(USER_SUSPENDED_QUEUE, true);
+    }
+
+    @Bean
+    public Queue banLiftedQueue() {
+        return new Queue(BAN_LIFTED_QUEUE, true);
     }
 }

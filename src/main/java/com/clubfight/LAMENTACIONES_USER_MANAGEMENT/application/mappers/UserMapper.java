@@ -15,7 +15,8 @@ import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.GuestRegis
 public class UserMapper {
 
     public static UserDocument toDocument(User user) {
-        if (user == null) return null;
+        if (user == null)
+            return null;
         return UserDocument.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -27,11 +28,15 @@ public class UserMapper {
                 .lastLogin(user.getLastLogin())
                 .refreshToken(user.getRefreshToken())
                 .guestExpiration(user.getGuestExpiration())
+                .banned(user.isBanned())
+                .banReason(user.getBanReason())
+                .banExpiresAt(user.getBanExpiresAt())
                 .build();
     }
 
     public static User toDomain(UserDocument doc) {
-        if (doc == null) return null;
+        if (doc == null)
+            return null;
         return User.builder()
                 .id(doc.getId())
                 .email(doc.getEmail())
@@ -43,26 +48,29 @@ public class UserMapper {
                 .lastLogin(doc.getLastLogin())
                 .refreshToken(doc.getRefreshToken())
                 .guestExpiration(doc.getGuestExpiration())
+                .banned(doc.isBanned()) 
+                .banReason(doc.getBanReason()) 
+                .banExpiresAt(doc.getBanExpiresAt())
                 .build();
     }
 
     public static AuthResponse toAuthResponse(User user, String accessToken) {
         return AuthResponse.builder()
-            .accessToken(accessToken)
-            .userId(user.getId())
-            .username(user.getUsername()) 
-            .email(user.getEmail())  
-            .build();
+                .accessToken(accessToken)
+                .userId(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .build();
     }
 
     public static UserRegisteredEvent toUserRegisteredEvent(User user) {
         return UserRegisteredEvent.builder()
-            .userId(user.getId())
-            .email(user.getEmail())
-            .username(user.getUsername())
-            .role(user.getRole())
-            .createdAt(user.getCreatedAt())
-            .build();
+                .userId(user.getId())
+                .email(user.getEmail())
+                .username(user.getUsername())
+                .role(user.getRole())
+                .createdAt(user.getCreatedAt())
+                .build();
     }
 
     public static UserLoggedInEvent toUserLoggedInEvent(User user, String token) {
@@ -75,7 +83,7 @@ public class UserMapper {
 
     public static GuestRegisteredEvent toGuestRegisteredEvent(User guest) {
         return GuestRegisteredEvent.builder()
-                .userId(guest.getId()) 
+                .userId(guest.getId())
                 .username(guest.getUsername())
                 .createdAt(guest.getCreatedAt())
                 .guestExpiration(guest.getGuestExpiration())
