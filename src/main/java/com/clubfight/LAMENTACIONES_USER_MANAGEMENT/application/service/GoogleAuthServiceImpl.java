@@ -117,6 +117,8 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
                     .role(user.getRole())
                     .build();
 
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Error en autenticación Google: " + e.getMessage(), e);
         }
