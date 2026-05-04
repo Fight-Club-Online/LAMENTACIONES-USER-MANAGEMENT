@@ -41,6 +41,8 @@ public class GlobalExceptionHandler {
             case "Perfil no encontrado para parchear" -> HttpStatus.NOT_FOUND;
             default -> message.contains("Token inválido") || message.contains("google")
                     ? HttpStatus.UNAUTHORIZED
+                    : message.contains("sancionada")
+                    ? HttpStatus.FORBIDDEN
                     : HttpStatus.INTERNAL_SERVER_ERROR;
         };
 
