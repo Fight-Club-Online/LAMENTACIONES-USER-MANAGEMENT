@@ -31,6 +31,8 @@ public class RabbitConfig {
     public static final String USER_SUSPENDED_QUEUE = "auth.user.suspended.queue";
     public static final String BAN_LIFTED_QUEUE = "auth.ban.lifted.queue";
 
+    public static final String SUPERVISION_EXCHANGE = "supervision.events";
+
     @Bean
     public Queue guestRegisteredQueue() {
         return new Queue(GUEST_REGISTERED_QUEUE, true);
@@ -115,5 +117,31 @@ public class RabbitConfig {
     @Bean
     public Queue banLiftedQueue() {
         return new Queue(BAN_LIFTED_QUEUE, true);
+    }
+
+    @Bean
+    public TopicExchange supervisionExchange() {
+        return new TopicExchange(SUPERVISION_EXCHANGE);
+    }
+
+    @Bean
+    public Binding userBannedBinding() {
+        return BindingBuilder.bind(userBannedQueue())
+                .to(supervisionExchange())
+                .with("user.banned");
+    }
+
+    @Bean
+    public Binding userSuspendedBinding() {
+        return BindingBuilder.bind(userSuspendedQueue())
+                .to(supervisionExchange())
+                .with("user.suspended");
+    }
+
+    @Bean
+    public Binding banLiftedBinding() {
+        return BindingBuilder.bind(banLiftedQueue())
+                .to(supervisionExchange())
+                .with("ban.lifted");
     }
 }
