@@ -19,41 +19,59 @@ public class BanEventListener {
 
     @RabbitListener(queues = "auth.user.banned.queue")
     public void handleUserBanned(Map<String, Object> event) {
-        String userId = (String) event.get("userId");
-        String reason = (String) event.get("reason");
-        log.info("[BAN] Usuario baneado: {}", userId);
-        userRepositoryPort.findById(userId).ifPresent(user -> {
-            user.setBanned(true);
-            user.setBanReason(reason);
-            userRepositoryPort.save(user);
-        });
+        try {
+            log.info("[BAN] Evento recibido RAW: {}", event);
+            String userId = (String) event.get("userId");
+            String reason = event.get("reason") != null ? event.get("reason").toString() : "UNKNOWN";
+            log.info("[BAN] Usuario baneado: {} razón: {}", userId, reason);
+            userRepositoryPort.findById(userId).ifPresent(user -> {
+                user.setBanned(true);
+                user.setBanReason(reason);
+                userRepositoryPort.save(user);
+                log.info("[BAN] Usuario {} actualizado a banned=true", userId);
+            });
+        } catch (Exception e) {
+            log.error("[BAN] Error procesando evento: {}", e.getMessage(), e);
+        }
     }
 
     @RabbitListener(queues = "auth.user.suspended.queue")
     public void handleUserSuspended(Map<String, Object> event) {
-        String userId = (String) event.get("userId");
-        String reason = (String) event.get("reason");
-        String expiresAtStr = (String) event.get("expiresAt");
-        log.info("[SUSPEND] Usuario suspendido: {}", userId); 
-        userRepositoryPort.findById(userId).ifPresent(user -> {
-            user.setBanned(true);
-            user.setBanReason(reason);
-            if (expiresAtStr != null) {
-                user.setBanExpiresAt(Instant.parse(expiresAtStr));
-            }
-            userRepositoryPort.save(user);
-        });
+        try {
+            log.info("[SUSPEND] Evento recibido RAW: {}", event);
+            String userId = (String) event.get("userId");
+            String reason = event.get("reason") != null ? event.get("reason").toString() : "UNKNOWN";
+            String expiresAtStr = event.get("expiresAt") != null ? event.get("expiresAt").toString() : null;
+            log.info("[SUSPEND] Usuario suspendido: {}", userId);
+            userRepositoryPort.findById(userId).ifPresent(user -> {
+                user.setBanned(true);
+                user.setBanReason(reason);
+                if (expiresAtStr != null) {
+                    user.setBanExpiresAt(Instant.parse(expiresAtStr));
+                }
+                userRepositoryPort.save(user);
+                log.info("[SUSPEND] Usuario {} actualizado a banned=true", userId);
+            });
+        } catch (Exception e) {
+            log.error("[SUSPEND] Error procesando evento: {}", e.getMessage(), e);
+        }
     }
 
     @RabbitListener(queues = "auth.ban.lifted.queue")
     public void handleBanLifted(Map<String, Object> event) {
-        String userId = (String) event.get("userId");
-        log.info("[LIFT] Ban levantado: {}", userId);
-        userRepositoryPort.findById(userId).ifPresent(user -> {
-            user.setBanned(false);
-            user.setBanReason(null);
-            user.setBanExpiresAt(null); 
-            userRepositoryPort.save(user);
-        });
+        try {
+            log.info("[LIFT] Evento recibido RAW: {}", event);
+            String userId = (String) event.get("userId");
+            log.info("[LIFT] Ban levantado: {}", userId);
+            userRepositoryPort.findById(userId).ifPresent(user -> {
+                user.setBanned(false);
+                user.setBanReason(null);
+                user.setBanExpiresAt(null);
+                userRepositoryPort.save(user);
+                log.info("[LIFT] Usuario {} actualizado a banned=false", userId);
+            });
+        } catch (Exception e) {
+            log.error("[LIFT] Error procesando evento: {}", e.getMessage(), e);
+        }
     }
 }
