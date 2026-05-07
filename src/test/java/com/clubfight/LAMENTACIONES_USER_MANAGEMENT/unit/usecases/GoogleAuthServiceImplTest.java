@@ -200,7 +200,7 @@ class GoogleAuthServiceImplTest {
             RuntimeException ex = assertThrows(RuntimeException.class,
                     () -> service.authenticate(tokenString));
 
-            assertEquals("Error en autenticación Google: Token de Google inválido", ex.getMessage());
+            assertEquals("Token de Google inválido", ex.getMessage());
             verify(userRepositoryPort, never()).findByEmail(any());
             verify(userRepositoryPort, never()).save(any());
             verify(refreshTokenService, never()).createRefreshToken(any());
@@ -230,9 +230,8 @@ class GoogleAuthServiceImplTest {
             RuntimeException ex = assertThrows(RuntimeException.class,
                     () -> service.authenticate(tokenString));
 
-            assertEquals("Error en autenticación Google: arsw", ex.getMessage());
-            assertNotNull(ex.getCause());
-            assertEquals("arsw", ex.getCause().getMessage());
+            assertEquals("arsw", ex.getMessage());
+            assertNull(ex.getCause());
         }
     }
 }

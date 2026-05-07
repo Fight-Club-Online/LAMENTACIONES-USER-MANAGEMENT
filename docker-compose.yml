@@ -5,7 +5,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - MONGO_URI=mongodb://mongo:27017/ClubFight
+      - "MONGO_URI=mongodb://mongo:27017/ClubFight?maxPoolSize=50&minPoolSize=5&waitQueueTimeoutMS=5000"
       - MONGO_DATABASE=ClubFight
       - JWT_SECRET=${JWT_SECRET:-ARSW_SECRET_OSCAR_JUAN_SANTIAGO_GAME_CLUB_FIGHT_2026_SECURITY_KEY_}
       - JWT_EXPIRATION=${JWT_EXPIRATION:-3600000}
