@@ -32,38 +32,40 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(Customizer.withDefaults()) 
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/users/register").permitAll()
-                .requestMatchers("/api/v1/users/login").permitAll()
-                .requestMatchers("/api/v1/users/guest").permitAll()
-                .requestMatchers("/auth/**").permitAll()
-                .requestMatchers("/health", "/actuator/health", "/error").permitAll()
-                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .requestMatchers("/api/v1/supervision/**").hasRole("ADMIN") 
-                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/v1/users/**").hasRole("ADMIN")
-                .anyRequest().authenticated()
-            )
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            .exceptionHandling(ex -> ex
-                .authenticationEntryPoint((request, response, authException) -> {
-                    response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write(
-                    "{\"status\":401,\"error\":\"Unauthorized\",\"message\":\"Token requerido o inválido\"}"
-                );
-            })
-            .accessDeniedHandler((request, response, accessDeniedException) -> {
-                response.setStatus(HttpStatus.FORBIDDEN.value());
-                response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write(
-                    "{\"status\":403,\"error\":\"Forbidden\",\"message\":\"No tienes permisos para este recurso\"}"
-                );
-            })
-        );
+                .cors(Customizer.withDefaults())
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/v1/users/register").permitAll()
+                        .requestMatchers("/api/v1/users/login").permitAll()
+                        .requestMatchers("/api/v1/users/guest").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers(
+                                "/health",
+                                "/actuator/health",
+                                "/actuator/prometheus",
+                                "/actuator/metrics",
+                                "/error")
+                        .permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/v1/supervision/**").hasRole("ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/v1/users/**")
+                        .hasRole("ADMIN")
+                        .anyRequest().authenticated())
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write(
+                                    "{\"status\":401,\"error\":\"Unauthorized\",\"message\":\"Token requerido o inválido\"}");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpStatus.FORBIDDEN.value());
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write(
+                                    "{\"status\":403,\"error\":\"Forbidden\",\"message\":\"No tienes permisos para este recurso\"}");
+                        }));
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
@@ -83,17 +85,16 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
-            "http://localhost:5173",
-            "https://clubfigth-e9ffa5bjeeb4bvb7.brazilsouth-01.azurewebsites.net",
-            "https://lamentaciones-frontend-git-preprod-juan-caballeros-projects.vercel.app",
-            "https://lamentaciones-frontend-r0g3i6enb-juan-caballeros-projects.vercel.app",
-            "https://lamentaciones-frontend.vercel.app",
-            "https://lamentaciones-frontend-juan-caballeros-projects.vercel.app"
-        ));
-        config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+                "http://localhost:5173",
+                "https://clubfigth-e9ffa5bjeeb4bvb7.brazilsouth-01.azurewebsites.net",
+                "https://lamentaciones-frontend-git-preprod-juan-caballeros-projects.vercel.app",
+                "https://lamentaciones-frontend-r0g3i6enb-juan-caballeros-projects.vercel.app",
+                "https://lamentaciones-frontend.vercel.app",
+                "https://lamentaciones-frontend-juan-caballeros-projects.vercel.app"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
