@@ -19,7 +19,7 @@ public class AdminInitializationConfig implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        String adminEmail = "eresmiperrita@gmail.com";
+        String adminEmail = "admin@gmail.com";
 
         userRepositoryPort.findByEmail(adminEmail).ifPresentOrElse(
             user -> {
@@ -37,7 +37,7 @@ public class AdminInitializationConfig implements CommandLineRunner {
             () -> {
                 User admin = new User();
                 admin.setEmail(adminEmail);
-                admin.setUsername("eresmiperrita");
+                admin.setUsername("admin");
                 admin.setPassword("123456"); 
                 admin.setRole(Role.ADMIN);
                 admin.setVerified(true);
