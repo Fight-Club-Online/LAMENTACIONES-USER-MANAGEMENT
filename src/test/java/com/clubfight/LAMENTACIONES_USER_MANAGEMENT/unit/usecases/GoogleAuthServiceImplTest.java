@@ -6,9 +6,9 @@ import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
@@ -28,13 +28,15 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+
 /**
- * Tests para GoogleAuthServiceImpl.
+ * Tests para GoogleAuthServiceImpl con soporte de instrumentación de métricas nativas.
  */
 @ExtendWith(MockitoExtension.class)
 class GoogleAuthServiceImplTest {
 
-    @InjectMocks
     private GoogleAuthServiceImpl service;
 
     @Mock
@@ -48,6 +50,21 @@ class GoogleAuthServiceImplTest {
 
     @Mock
     private UserEventPublisher eventPublisher;
+
+    private MeterRegistry meterRegistry; 
+
+    @BeforeEach
+    void setUp() {
+        meterRegistry = new SimpleMeterRegistry();
+
+        service = new GoogleAuthServiceImpl(
+                userRepositoryPort,
+                jwtUtil,
+                refreshTokenService,
+                eventPublisher,
+                meterRegistry
+        );
+    }
 
     @Test
     void shouldAuthenticateExistingUser() throws Exception {
@@ -110,6 +127,8 @@ class GoogleAuthServiceImplTest {
             verify(refreshTokenService, times(1)).createRefreshToken("oscar");
             verify(eventPublisher, times(1)).publishUserLoggedIn(any());
             verify(eventPublisher, never()).publishUserRegistered(any());
+            
+            assertEquals(1.0, meterRegistry.counter("google_auth_total", "resultado", "success").count());
         }
     }
 
@@ -176,6 +195,9 @@ class GoogleAuthServiceImplTest {
             verify(refreshTokenService, times(1)).createRefreshToken("suarez");
             verify(eventPublisher, times(1)).publishUserRegistered(any());
             verify(eventPublisher, times(1)).publishUserLoggedIn(any());
+            
+            assertEquals(1.0, meterRegistry.counter("usuarios_nuevos_google_total").count());
+            assertEquals(1.0, meterRegistry.counter("google_auth_total", "resultado", "success").count());
         }
     }
 
@@ -206,6 +228,8 @@ class GoogleAuthServiceImplTest {
             verify(refreshTokenService, never()).createRefreshToken(any());
             verify(eventPublisher, never()).publishUserRegistered(any());
             verify(eventPublisher, never()).publishUserLoggedIn(any());
+            
+            assertEquals(1.0, meterRegistry.counter("google_auth_total", "resultado", "invalid_token").count());
         }
     }
 

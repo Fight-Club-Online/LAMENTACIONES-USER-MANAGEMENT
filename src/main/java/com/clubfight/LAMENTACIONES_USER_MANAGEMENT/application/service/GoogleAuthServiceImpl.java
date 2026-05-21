@@ -22,22 +22,36 @@ import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import org.springframework.beans.factory.annotation.Value;
 
-import lombok.RequiredArgsConstructor;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 
 /**
- * Implementación del servicio de autenticación de google.
+ * Implementación del servicio de autenticación de google con telemetría de negocio directa.
  */
 @Service
-@RequiredArgsConstructor
 public class GoogleAuthServiceImpl implements GoogleAuthService {
 
     private final UserRepositoryPort userRepositoryPort;
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
     private final UserEventPublisher eventPublisher;
+    private final MeterRegistry meterRegistry;  
 
     @Value("${google.client.id}")
     private String clientId;
+
+    public GoogleAuthServiceImpl(
+            UserRepositoryPort userRepositoryPort,
+            JwtUtil jwtUtil,
+            RefreshTokenService refreshTokenService,
+            UserEventPublisher eventPublisher,
+            MeterRegistry meterRegistry) {
+        this.userRepositoryPort = userRepositoryPort;
+        this.jwtUtil = jwtUtil;
+        this.refreshTokenService = refreshTokenService;
+        this.eventPublisher = eventPublisher;
+        this.meterRegistry = meterRegistry;
+    }
 
     @Override
     @Transactional
@@ -52,6 +66,7 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
             GoogleIdToken idToken = verifier.verify(idTokenString);
 
             if (idToken == null) {
+                trackGoogleAuth("invalid_token");
                 throw new RuntimeException("Token de Google inválido");
             }
 
@@ -73,6 +88,7 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
                                 .build();
                         return userRepositoryPort.save(newUser);
                     });
+            
             if (user.isBanned()) {
                 if (user.getBanExpiresAt() != null && Instant.now().isAfter(user.getBanExpiresAt())) {
                     user.setBanned(false);
@@ -80,11 +96,17 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
                     user.setBanExpiresAt(null);
                     userRepositoryPort.save(user);
                 } else {
+                    trackGoogleAuth("banned");
                     throw new RuntimeException("Tu cuenta ha sido sancionada. Razón: " + user.getBanReason());
                 }
             }
 
             if (isNewUser.get()) {
+                Counter.builder("usuarios_nuevos_google_total")
+                        .description("Total de nuevos usuarios registrados usando Google Auth")
+                        .register(meterRegistry)
+                        .increment();
+
                 eventPublisher.publishUserRegistered(UserRegisteredEvent.builder()
                         .userId(user.getId())
                         .email(user.getEmail())
@@ -108,6 +130,8 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
                     .loginAt(user.getLastLogin())
                     .build());
 
+            trackGoogleAuth("success");
+
             return AuthResponse.builder()
                     .accessToken(accessToken)
                     .refreshToken(refreshToken.getToken())
@@ -120,7 +144,15 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
+            trackGoogleAuth("error");
             throw new RuntimeException("Error en autenticación Google: " + e.getMessage(), e);
         }
+    }
+    private void trackGoogleAuth(String resultado) {
+        Counter.builder("google_auth_total")
+                .description("Total de intentos de autenticación mediante Google")
+                .tag("resultado", resultado)
+                .register(meterRegistry)
+                .increment();
     }
 }

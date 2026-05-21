@@ -9,18 +9,26 @@ import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.events.commands.U
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.config.RedisConfig;
+
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Tests para UserProfileService con soporte de instrumentación de métricas de perfiles reales.
+ */
+@ExtendWith(MockitoExtension.class)
 class UserProfileServicePatchIfsTest {
 
-    @InjectMocks
     private UserProfileService service;
 
     @Mock
@@ -32,9 +40,13 @@ class UserProfileServicePatchIfsTest {
     @Mock
     private com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.mappers.UserProfileMapper mapper;
 
+    private MeterRegistry meterRegistry; 
+
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        meterRegistry = new SimpleMeterRegistry();
+
+        service = new UserProfileService(repository, mapper, meterRegistry);
     }
 
     private UserProfile baseProfile(String userId) {
@@ -51,7 +63,6 @@ class UserProfileServicePatchIfsTest {
 
     @Test
     void shouldPatchUsernameOnly() {
-        
         String userId = "Porras Oscar";
         UserProfile existing = baseProfile(userId);
         
@@ -76,11 +87,12 @@ class UserProfileServicePatchIfsTest {
         assertEquals("JuanAvatar", saved.getAvatarURL());
         assertEquals("Bogota", saved.getCity());
         assertTrue(saved.isNotification());
+
+        assertEquals(1.0, meterRegistry.counter("perfiles_operaciones_total", "tipo", "parche").count());
     }
 
     @Test
     void shouldPatchBioOnly() {
-
         String userId = "u-bio";
         UserProfile existing = baseProfile(userId);
 
@@ -104,11 +116,12 @@ class UserProfileServicePatchIfsTest {
         assertEquals("JuanAvatar", saved.getAvatarURL());
         assertEquals("Bogota", saved.getCity());
         assertTrue(saved.isNotification());
+
+        assertEquals(1.0, meterRegistry.counter("perfiles_operaciones_total", "tipo", "parche").count());
     }
 
     @Test
     void shouldPatchCountryOnly() {
-
         String userId = "u-country";
         UserProfile existing = baseProfile(userId);
 
@@ -132,11 +145,12 @@ class UserProfileServicePatchIfsTest {
         assertEquals("JuanAvatar", saved.getAvatarURL());
         assertEquals("Bogota", saved.getCity());
         assertTrue(saved.isNotification());
+
+        assertEquals(1.0, meterRegistry.counter("perfiles_operaciones_total", "tipo", "parche").count());
     }
 
     @Test
     void shouldPatchAvatarOnly() {
-
         String userId = "u-avatar";
         UserProfile existing = baseProfile(userId);
 
@@ -160,11 +174,12 @@ class UserProfileServicePatchIfsTest {
         assertEquals("newAvatarUrl", saved.getAvatarURL());
         assertEquals("Bogota", saved.getCity());
         assertTrue(saved.isNotification());
+
+        assertEquals(1.0, meterRegistry.counter("perfiles_operaciones_total", "tipo", "parche").count());
     }
 
     @Test
     void shouldPatchCityOnly() {
-
         String userId = "u-city";
         UserProfile existing = baseProfile(userId);
 
@@ -188,11 +203,12 @@ class UserProfileServicePatchIfsTest {
         assertEquals("JuanAvatar", saved.getAvatarURL());
         assertEquals("Medellin", saved.getCity());
         assertTrue(saved.isNotification());
+
+        assertEquals(1.0, meterRegistry.counter("perfiles_operaciones_total", "tipo", "parche").count());
     }
 
     @Test
     void shouldPatchNotificationOnly() {
-
         String userId = "u-notif";
         UserProfile existing = baseProfile(userId);
 
@@ -216,11 +232,12 @@ class UserProfileServicePatchIfsTest {
         assertEquals("JuanAvatar", saved.getAvatarURL());
         assertEquals("Bogota", saved.getCity());
         assertFalse(saved.isNotification());
+
+        assertEquals(1.0, meterRegistry.counter("perfiles_operaciones_total", "tipo", "parche").count());
     }
 
     @Test
     void shouldNotChangeAnythingWhenAllNull() {
-
         String userId = "u-none";
         UserProfile existing = baseProfile(userId);
 
@@ -244,11 +261,12 @@ class UserProfileServicePatchIfsTest {
         assertEquals("JuanAvatar", saved.getAvatarURL());
         assertEquals("Bogota", saved.getCity());
         assertTrue(saved.isNotification());
+
+        assertEquals(1.0, meterRegistry.counter("perfiles_operaciones_total", "tipo", "parche").count());
     }
 
     @Test
     void shouldCreateRedisConnectionFactory() {
-
         RedisConfig config = new RedisConfig();
 
         ReflectionTestUtils.setField(config, "redisHost", "localhost");
@@ -261,22 +279,23 @@ class UserProfileServicePatchIfsTest {
 
     @Test
     void shouldSaveUserProfile() {
-
         SaveUserProfileCommand cmd = mock(SaveUserProfileCommand.class);
         UserProfile profile = baseProfile("u-save");
         
+        when(cmd.getUserId()).thenReturn("u-save");
+        when(repository.findByUserId("u-save")).thenReturn(Optional.empty());
         when(mapper.fromSaveCommand(cmd)).thenReturn(profile);
+        
         service.saveUserProfile(cmd);
         
         verify(mapper).fromSaveCommand(cmd);
         verify(repository).save(profile);
+
+        assertEquals(1.0, meterRegistry.counter("perfiles_operaciones_total", "tipo", "creacion").count());
     }
-
-
 
     @Test
     void shouldUpdateUserProfile() {
-
         UpdateUserProfileCommand cmd = mock(UpdateUserProfileCommand.class);
         UserProfile profile = baseProfile("u-update");
         
@@ -286,18 +305,20 @@ class UserProfileServicePatchIfsTest {
         
         verify(mapper).fromUpdateCommand(cmd);
         verify(repository).save(profile);
+
+        assertEquals(1.0, meterRegistry.counter("perfiles_operaciones_total", "tipo", "actualizacion_completa").count());
     }
 
     @Test
     void shouldDeleteUserProfile() {
-
         String userId = "u-delete";
         
         service.delete(userId);
         
         verify(repository).deleteByUserId(userId);
-    }
 
+        assertEquals(1.0, meterRegistry.counter("perfiles_operaciones_total", "tipo", "eliminacion").count());
+    }
 
     @Test
     void shouldNotSaveProfileIfAlreadyExists() {
@@ -309,16 +330,29 @@ class UserProfileServicePatchIfsTest {
         
         verify(repository, never()).save(any());
         verify(mapper, never()).fromSaveCommand(any());
+
+        assertEquals(0.0, meterRegistry.counter("perfiles_operaciones_total", "tipo", "creacion").count());
     }
     
     @Test
-    void shouldReturnNullWhenProfileNotFound() {
+    void shouldReturnProfileWithMetricOnSuccess() {
+        UserProfile profile = baseProfile("u-find");
+        when(repository.findByUserId("u-find")).thenReturn(Optional.of(profile));
+        
+        UserProfile result = service.getUserProfile("u-find");
 
+        assertNotNull(result);
+        assertEquals(1.0, meterRegistry.counter("perfiles_busquedas_total", "resultado", "exito").count());
+    }
+
+    @Test
+    void shouldReturnNullWhenProfileNotFound() {
         when(repository.findByUserId("u-missing")).thenReturn(Optional.empty());
         
         UserProfile result = service.getUserProfile("u-missing");
 
         assertNull(result);
+        assertEquals(1.0, meterRegistry.counter("perfiles_busquedas_total", "resultado", "no_encontrado").count());
     }
 
     @Test
@@ -330,5 +364,6 @@ class UserProfileServicePatchIfsTest {
         assertThrows(RuntimeException.class, () -> service.patch(userId, command));
         
         verify(repository, never()).save(any());
+        assertEquals(0.0, meterRegistry.counter("perfiles_operaciones_total", "tipo", "parche").count());
     }
 }

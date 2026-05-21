@@ -12,10 +12,14 @@ import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.model.RefreshToken;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.model.User;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.config.JwtUtil;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.infrastructure.dtos.response.AuthResponse;
+
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.Instant;
@@ -24,9 +28,12 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Tests para UserService con soporte de instrumentación de métricas de acceso reales en memoria.
+ */
+@ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-    @InjectMocks
     private UserService service;
 
     @Mock
@@ -44,9 +51,20 @@ class UserServiceTest {
     @Mock
     private RefreshTokenService refreshTokenService;
 
+    private MeterRegistry meterRegistry; 
+
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        meterRegistry = new SimpleMeterRegistry();
+
+        service = new UserService(
+                userRepositoryPort,
+                jwtUtil,
+                passwordEncoder,
+                eventPublisher,
+                refreshTokenService,
+                meterRegistry
+        );
     }
 
     @Test
@@ -80,6 +98,8 @@ class UserServiceTest {
         assertEquals("r-tok", res.getRefreshToken());
         verify(userRepositoryPort).save(argThat(u -> "juan-felipe@gmail.com".equals(u.getEmail()) && u.getPassword() != null));
         verify(eventPublisher, times(1)).publishUserRegistered(any());
+
+        assertEquals(1.0, meterRegistry.counter("usuarios_registro_total", "tipo", "usuario").count());
     }
 
     @Test
@@ -94,11 +114,12 @@ class UserServiceTest {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> service.register(cmd));
         assertEquals("Usuario ya existe con ese email", ex.getMessage());
         verify(userRepositoryPort, never()).save(any());
+
+        assertEquals(0.0, meterRegistry.counter("usuarios_registro_total", "tipo", "usuario").count());
     }
 
     @Test
     void shouldLoginUser() {
-
         LoginUserCommand cmd = LoginUserCommand.builder()
                 .email("robinson@gmail.com")
                 .password("chispa")
@@ -126,6 +147,8 @@ class UserServiceTest {
         assertEquals("r1", res.getRefreshToken());
         verify(userRepositoryPort).save(any(User.class)); 
         verify(eventPublisher, times(1)).publishUserLoggedIn(any());
+
+        assertEquals(1.0, meterRegistry.counter("usuarios_autenticacion_total", "resultado", "success").count());
     }
 
     @Test
@@ -140,6 +163,8 @@ class UserServiceTest {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> service.login(cmd));
         assertEquals("Usuario no encontrado", ex.getMessage());
         verify(passwordEncoder, never()).matches(any(), any());
+
+        assertEquals(1.0, meterRegistry.counter("usuarios_autenticacion_total", "resultado", "not_found").count());
     }
 
     @Test
@@ -162,6 +187,8 @@ class UserServiceTest {
         assertEquals("Contraseña incorrecta", ex.getMessage());
         verify(userRepositoryPort, never()).save(any());
         verify(eventPublisher, never()).publishUserLoggedIn(any());
+
+        assertEquals(1.0, meterRegistry.counter("usuarios_autenticacion_total", "resultado", "invalid_password").count());
     }
 
     @Test
@@ -170,8 +197,11 @@ class UserServiceTest {
                 .username("guest1")
                 .build();
 
+        when(userRepositoryPort.findGuestByUsername("guest1")).thenReturn(Optional.empty());
+
         User guestSaved = User.builder()
                 .id("g1")
+                .username("guest1")
                 .role(Role.GUEST)
                 .guestExpiration(Instant.now().plusSeconds(3600))
                 .createdAt(Instant.now())
@@ -189,5 +219,32 @@ class UserServiceTest {
         assertEquals("guest-acc", res.getAccessToken());
         assertEquals("gr", res.getRefreshToken());
         verify(eventPublisher, times(1)).publishGuestRegistered(any());
+
+        assertEquals(1.0, meterRegistry.counter("usuarios_registro_total", "tipo", "invitado").count());
+    }
+
+    @Test
+    void shouldNotTrackRegistrationWhenGuestAlreadyExists() {
+        RegisterGuestCommand cmd = RegisterGuestCommand.builder()
+                .username("existingGuest")
+                .build();
+
+        User existingGuest = User.builder()
+                .id("g-existing")
+                .username("existingGuest")
+                .role(Role.GUEST)
+                .build();
+
+        when(userRepositoryPort.findGuestByUsername("existingGuest")).thenReturn(Optional.of(existingGuest));
+        when(jwtUtil.generateToken(existingGuest)).thenReturn("guest-acc");
+        RefreshToken refresh = RefreshToken.builder().token("gr").userId("g-existing").expiration(Instant.now().plusSeconds(1000)).build();
+        when(refreshTokenService.createRefreshToken("g-existing")).thenReturn(refresh);
+
+        AuthResponse res = service.registerGuest(cmd);
+
+        assertNotNull(res);
+        verify(userRepositoryPort, never()).save(any());
+        
+        assertEquals(0.0, meterRegistry.counter("usuarios_registro_total", "tipo", "invitado").count());
     }
 }

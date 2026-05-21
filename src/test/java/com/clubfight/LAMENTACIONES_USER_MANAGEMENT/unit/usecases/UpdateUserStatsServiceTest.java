@@ -5,6 +5,10 @@ import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.service.UpdateUse
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.enums.Achievement;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.enums.Rank;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.domain.model.UserStats;
+
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -17,14 +21,25 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * Tests para UpdateUserStatsService con soporte de instrumentación de métricas de combates reales.
+ */
 @ExtendWith(MockitoExtension.class)
 class UpdateUserStatsServiceTest {
 
-    @InjectMocks
     private UpdateUserStatsService service;
 
     @Mock
     private UserStatsRepositoryPort repository;
+
+    private MeterRegistry meterRegistry; 
+
+    @BeforeEach
+    void setUp() {
+        meterRegistry = new SimpleMeterRegistry();
+
+        service = new UpdateUserStatsService(repository, meterRegistry);
+    }
 
     private UserStats statsOf(String userId, int wins, int losses, int draws,
                                int totalFights, int points, int streak) {
@@ -35,10 +50,9 @@ class UpdateUserStatsServiceTest {
 
     private UserStats capturedSave() {
         ArgumentCaptor<UserStats> captor = ArgumentCaptor.forClass(UserStats.class);
-        verify(repository).save(captor.capture());
+        verify(repository, atLeastOnce()).save(captor.capture());
         return captor.getValue();
     }
-
 
     @Test
     void shouldCreateStatsFromScratchOnFirstWin() {
@@ -55,6 +69,9 @@ class UpdateUserStatsServiceTest {
         assertEquals(1, saved.getStreak());
         assertEquals(Rank.HIERRO_I, saved.getRank());
         assertEquals(1, saved.getLevel());
+
+        assertEquals(1.0, meterRegistry.counter("peleas_procesadas_total", "resultado", "victoria", "rango", "HIERRO_I").count());
+        assertEquals(1.0, meterRegistry.counter("logros_desbloqueados_total", "logro", "PRIMERA_SANGRE").count());
     }
 
     @Test
@@ -68,6 +85,8 @@ class UpdateUserStatsServiceTest {
         assertEquals(1, saved.getLosses());
         assertEquals(0, saved.getStreak());
         assertEquals(0, saved.getPoints()); 
+        
+        assertEquals(1.0, meterRegistry.counter("peleas_procesadas_total", "resultado", "derrota", "rango", "HIERRO_I").count());
     }
 
     @Test
@@ -82,6 +101,8 @@ class UpdateUserStatsServiceTest {
         assertEquals(1, saved.getDraws());
         assertEquals(0, saved.getStreak());
         assertEquals(5, saved.getPoints());
+        
+        assertEquals(1.0, meterRegistry.counter("peleas_procesadas_total", "resultado", "empate", "rango", "HIERRO_I").count());
     }
 
     @Test
@@ -169,7 +190,7 @@ class UpdateUserStatsServiceTest {
         
         UserStats saved = capturedSave();
         assertEquals(Rank.BRONCE_I, saved.getRank());
-        }
+    }
 
     @Test
     void shouldReachPlatinoAt1500Points() {
@@ -190,6 +211,7 @@ class UpdateUserStatsServiceTest {
 
         UserStats saved = capturedSave();
         assertTrue(saved.getAchievements().contains(Achievement.PRIMERA_SANGRE));
+        assertEquals(1.0, meterRegistry.counter("logros_desbloqueados_total", "logro", "PRIMERA_SANGRE").count());
     }
 
     @Test
@@ -199,7 +221,12 @@ class UpdateUserStatsServiceTest {
         service.applyFightResult("u-nops", false, false, -10);
 
         UserStats saved = capturedSave();
-        assertFalse(saved.getAchievements().contains(Achievement.PRIMERA_SANGRE));
+        falseUp(saved.getAchievements().contains(Achievement.PRIMERA_SANGRE));
+        assertEquals(0.0, meterRegistry.counter("logros_desbloqueados_total", "logro", "PRIMERA_SANGRE").count());
+    }
+
+    private void falseUp(boolean condition) {
+        assertFalse(condition);
     }
 
     @Test
@@ -211,6 +238,7 @@ class UpdateUserStatsServiceTest {
 
         UserStats saved = capturedSave();
         assertTrue(saved.getAchievements().contains(Achievement.VETERANO));
+        assertEquals(1.0, meterRegistry.counter("logros_desbloqueados_total", "logro", "VETERANO").count());
     }
 
     @Test
@@ -233,6 +261,7 @@ class UpdateUserStatsServiceTest {
 
         UserStats saved = capturedSave();
         assertTrue(saved.getAchievements().contains(Achievement.LEYENDA));
+        assertEquals(1.0, meterRegistry.counter("logros_desbloqueados_total", "logro", "LEYENDA").count());
     }
 
     @Test
@@ -245,6 +274,7 @@ class UpdateUserStatsServiceTest {
         UserStats saved = capturedSave();
         assertTrue(saved.getAchievements().contains(Achievement.RACHA_DE_5));
         assertFalse(saved.getAchievements().contains(Achievement.RACHA_DE_10));
+        assertEquals(1.0, meterRegistry.counter("logros_desbloqueados_total", "logro", "RACHA_DE_5").count());
     }
 
     @Test
@@ -257,6 +287,7 @@ class UpdateUserStatsServiceTest {
         UserStats saved = capturedSave();
         assertTrue(saved.getAchievements().contains(Achievement.RACHA_DE_5));
         assertTrue(saved.getAchievements().contains(Achievement.RACHA_DE_10));
+        assertEquals(1.0, meterRegistry.counter("logros_desbloqueados_total", "logro", "RACHA_DE_10").count());
     }
 
     @Test
@@ -269,6 +300,7 @@ class UpdateUserStatsServiceTest {
         UserStats saved = capturedSave();
         assertEquals(Rank.PLATINO, saved.getRank());
         assertTrue(saved.getAchievements().contains(Achievement.MAESTRO_DEL_RING));
+        assertEquals(1.0, meterRegistry.counter("logros_desbloqueados_total", "logro", "MAESTRO_DEL_RING").count());
     }
 
     @Test

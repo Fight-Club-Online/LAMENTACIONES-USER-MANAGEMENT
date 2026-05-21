@@ -3,6 +3,9 @@ package com.clubfight.LAMENTACIONES_USER_MANAGEMENT.unit.usecases;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.clubfight.LAMENTACIONES_USER_MANAGEMENT.application.service.AzureBlobService;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -25,9 +28,15 @@ class AzureBlobServiceTest {
 
     @Mock
     private BlobClient blobClient;
+    private MeterRegistry meterRegistry; 
+
+    @BeforeEach
+    void setUp() {
+        meterRegistry = new SimpleMeterRegistry();
+    }
 
     private AzureBlobService buildDisabled() {
-        return new AzureBlobService("", "avatars");
+        return new AzureBlobService("", "avatars", meterRegistry);
     }
 
     private AzureBlobService buildEnabled() {
@@ -39,16 +48,16 @@ class AzureBlobServiceTest {
 
     @Test
     void shouldBeDisabledWhenConnectionStringIsEmpty() {
-        AzureBlobService service = new AzureBlobService("", "avatars");
+        AzureBlobService service = new AzureBlobService("", "avatars", meterRegistry);
 
         boolean enabled = (boolean) ReflectionTestUtils.getField(service, "enabled");
-        assertFalse(enabled);
+        assertFalse(enabled); 
         assertNull(ReflectionTestUtils.getField(service, "containerClient"));
     }
 
     @Test
     void shouldBeDisabledWhenConnectionStringIsNull() {
-        AzureBlobService service = new AzureBlobService(null, "avatars");
+        AzureBlobService service = new AzureBlobService(null, "avatars", meterRegistry);
 
         boolean enabled = (boolean) ReflectionTestUtils.getField(service, "enabled");
         assertFalse(enabled);
@@ -56,25 +65,25 @@ class AzureBlobServiceTest {
 
     @Test
     void shouldBeDisabledWhenConnectionStringIsPlaceholder() {
-        AzureBlobService service = new AzureBlobService("placeholder", "avatars");
+        AzureBlobService service = new AzureBlobService("placeholder", "avatars", meterRegistry);
 
         boolean enabled = (boolean) ReflectionTestUtils.getField(service, "enabled");
         assertFalse(enabled);
     }
-
 
     @Test
     void shouldThrowWhenServiceIsDisabled() {
         AzureBlobService service = buildDisabled();
 
         MockMultipartFile file = new MockMultipartFile(
-                "file", "avatar.jpg", "image/jpeg", "bytes".getBytes()
-        );
+                "file", "avatar.jpg", "image/jpeg", "bytes".getBytes());
 
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> service.uploadAvatar(file, "user-123"));
 
         assertEquals("Azure Storage no está configurado", ex.getMessage());
+        
+        assertEquals(1.0, meterRegistry.counter("avatar_upload_errors_total", "type", "config_error").count());
     }
 
     @Test
@@ -82,8 +91,7 @@ class AzureBlobServiceTest {
         AzureBlobService service = buildEnabled();
 
         MockMultipartFile file = new MockMultipartFile(
-                "file", "photo.jpg", "image/jpeg", "image-content".getBytes()
-        );
+                "file", "photo.jpg", "image/jpeg", "image-content".getBytes());
 
         String expectedUrl = "https://mystorage.blob.core.windows.net/avatars/user-1/uuid.jpg";
 
@@ -94,10 +102,11 @@ class AzureBlobServiceTest {
         String result = service.uploadAvatar(file, "user-1");
 
         assertEquals(expectedUrl, result);
-        verify(containerClient).getBlobClient(argThat(name ->
-                name.startsWith("avatars/user-1/") && name.endsWith(".jpg")));
+        verify(containerClient)
+                .getBlobClient(argThat(name -> name.startsWith("avatars/user-1/") && name.endsWith(".jpg")));
         verify(blobClient).upload(any(ByteArrayInputStream.class), eq((long) "image-content".length()), eq(true));
         verify(blobClient).getBlobUrl();
+        assertEquals(1.0, meterRegistry.counter("avatar_uploads_total", "extension", "jpg").count());
     }
 
     @Test
@@ -105,8 +114,7 @@ class AzureBlobServiceTest {
         AzureBlobService service = buildEnabled();
 
         MockMultipartFile file = new MockMultipartFile(
-                "file", "avatar.png", "image/png", "png-bytes".getBytes()
-        );
+                "file", "avatar.png", "image/png", "png-bytes".getBytes());
 
         when(containerClient.getBlobClient(anyString())).thenReturn(blobClient);
         doNothing().when(blobClient).upload(any(), anyLong(), eq(true));
@@ -115,6 +123,7 @@ class AzureBlobServiceTest {
         service.uploadAvatar(file, "user-2");
 
         verify(containerClient).getBlobClient(argThat(name -> name.endsWith(".png")));
+        assertEquals(1.0, meterRegistry.counter("avatar_uploads_total", "extension", "png").count());
     }
 
     @Test
@@ -122,8 +131,7 @@ class AzureBlobServiceTest {
         AzureBlobService service = buildEnabled();
 
         MockMultipartFile file = new MockMultipartFile(
-                "file", "avatarsinextension", "image/jpeg", "bytes".getBytes()
-        );
+                "file", "avatarsinextension", "image/jpeg", "bytes".getBytes());
 
         when(containerClient.getBlobClient(anyString())).thenReturn(blobClient);
         doNothing().when(blobClient).upload(any(), anyLong(), eq(true));
@@ -132,16 +140,15 @@ class AzureBlobServiceTest {
         service.uploadAvatar(file, "user-3");
 
         verify(containerClient).getBlobClient(argThat(name -> name.endsWith(".jpg")));
+        assertEquals(1.0, meterRegistry.counter("avatar_uploads_total", "extension", "jpg").count());
     }
 
     @Test
     void shouldUseJpgExtensionWhenFilenameIsNull() throws IOException {
         AzureBlobService service = buildEnabled();
 
-        // filename null → getOriginalFilename() devuelve null
         MockMultipartFile file = new MockMultipartFile(
-                "file", null, "image/jpeg", "bytes".getBytes()
-        );
+                "file", null, "image/jpeg", "bytes".getBytes());
 
         when(containerClient.getBlobClient(anyString())).thenReturn(blobClient);
         doNothing().when(blobClient).upload(any(), anyLong(), eq(true));
@@ -150,6 +157,7 @@ class AzureBlobServiceTest {
         service.uploadAvatar(file, "user-4");
 
         verify(containerClient).getBlobClient(argThat(name -> name.endsWith(".jpg")));
+        assertEquals(1.0, meterRegistry.counter("avatar_uploads_total", "extension", "jpg").count());
     }
 
     @Test
@@ -158,8 +166,7 @@ class AzureBlobServiceTest {
         String userId = "abc-xyz-789";
 
         MockMultipartFile file = new MockMultipartFile(
-                "file", "img.jpg", "image/jpeg", "data".getBytes()
-        );
+                "file", "img.jpg", "image/jpeg", "data".getBytes());
 
         when(containerClient.getBlobClient(anyString())).thenReturn(blobClient);
         doNothing().when(blobClient).upload(any(), anyLong(), eq(true));
@@ -167,16 +174,14 @@ class AzureBlobServiceTest {
 
         service.uploadAvatar(file, userId);
 
-        verify(containerClient).getBlobClient(argThat(name ->
-                name.contains("avatars/" + userId + "/")));
+        verify(containerClient).getBlobClient(argThat(name -> name.contains("avatars/" + userId + "/")));
     }
 
     @Test
     void shouldPropagateIOExceptionFromInputStream() throws IOException {
         AzureBlobService service = buildEnabled();
         MockMultipartFile file = spy(new MockMultipartFile(
-                "file", "img.jpg", "image/jpeg", "data".getBytes()
-        ));
+                "file", "img.jpg", "image/jpeg", "data".getBytes()));
         doThrow(new IOException("stream error")).when(file).getInputStream();
 
         when(containerClient.getBlobClient(anyString())).thenReturn(blobClient);
@@ -184,5 +189,7 @@ class AzureBlobServiceTest {
         assertThrows(IOException.class, () -> service.uploadAvatar(file, "user-5"));
 
         verify(blobClient, never()).upload(any(), anyLong(), anyBoolean());
+        
+        assertEquals(1.0, meterRegistry.counter("avatar_upload_errors_total", "type", "upload_failed").count());
     }
 }
